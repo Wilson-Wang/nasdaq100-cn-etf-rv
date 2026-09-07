@@ -49,6 +49,7 @@ PRICE_COLUMNS = [
     "turnover",
     "pct_change",
     "trade_status",
+    "is_tradable",
     "source",
     "source_priority",
     "ingested_at_utc",
@@ -99,6 +100,89 @@ def _to_numeric(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
         if column in df.columns:
             df[column] = pd.to_numeric(df[column], errors="coerce")
     return df
+
+
+def _add_tradability(df: pd.DataFrame) -> pd.DataFrame:
+    """Mark rows that are usable for executable pair-return research."""
+    close = pd.to_numeric(df.get("close"), errors="coerce")
+    volume = pd.to_numeric(df.get("volume"), errors="coerce")
+    tradable = close.gt(0) & volume.gt(0)
+
+    if "trade_status" in df.columns:
+        status = pd.to_numeric(df["trade_status"], errors="coerce")
+        tradable &= status.isna() | status.gt(0)
+
+    df["is_tradable"] = tradable.astype("boolean")
+    return df
+
+
+def _price_coverage(frame: pd.DataFrame, start_date: str, end_date: str) -> dict[str, object]:
+    """Summarize whether a source appears to cover the requested date window."""
+    if frame.empty or "date" not in frame.columns:
+        return {
+            "rows": 0,
+            "min_date": None,
+            "max_date": None,
+            "business_day_ratio": 0.0,
+            "needs_supplement": True,
+        }
+
+    dates = pd.to_datetime(frame["date"], errors="coerce").dropna().drop_duplicates()
+    if dates.empty:
+        return {
+            "rows": 0,
+            "min_date": None,
+            "max_date": None,
+            "business_day_ratio": 0.0,
+            "needs_supplement": True,
+        }
+
+    start = pd.Timestamp(start_date)
+    end = pd.Timestamp(end_date)
+    expected_business_days = max(len(pd.bdate_range(start, end)), 1)
+    observed = len(dates)
+    min_date = dates.min()
+    max_date = dates.max()
+
+    business_day_ratio = observed / expected_business_days
+    start_gap_days = max((min_date - start).days, 0)
+    end_gap_days = max((end - max_date).days, 0)
+
+    needs_supplement = (
+        business_day_ratio < 0.80
+        or start_gap_days > 21
+        or end_gap_days > 7
+    )
+    return {
+        "rows": observed,
+        "min_date": min_date.strftime("%Y-%m-%d"),
+        "max_date": max_date.strftime("%Y-%m-%d"),
+        "business_day_ratio": round(float(business_day_ratio), 4),
+        "needs_supplement": bool(needs_supplement),
+    }
+
+
+def _merge_price_frames(frames: list[pd.DataFrame]) -> pd.DataFrame:
+    """Merge source frames by date while preserving source priority."""
+    usable = [frame for frame in frames if frame is not None and not frame.empty]
+    if not usable:
+        return _empty(PRICE_COLUMNS)
+
+    combined = pd.concat(usable, ignore_index=True, sort=False)
+    combined["source_priority"] = pd.to_numeric(
+        combined["source_priority"], errors="coerce"
+    ).fillna(9999)
+    combined["_ingested_sort"] = pd.to_datetime(
+        combined["ingested_at_utc"], errors="coerce", utc=True
+    )
+    combined = combined.sort_values(
+        ["symbol", "date", "source_priority", "_ingested_sort"],
+        ascending=[True, True, True, False],
+        kind="stable",
+    )
+    combined = combined.drop_duplicates(["symbol", "date"], keep="first")
+    combined = combined.drop(columns=["_ingested_sort"]).reset_index(drop=True)
+    return combined.reindex(columns=PRICE_COLUMNS)
 
 
 def fetch_prices_baostock(etf: ETF, start_date: str, end_date: str) -> pd.DataFrame:
@@ -152,8 +236,20 @@ def fetch_prices_baostock(etf: ETF, start_date: str, end_date: str) -> pd.DataFr
     df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.strftime("%Y-%m-%d")
     df = _to_numeric(
         df,
-        ["open", "high", "low", "close", "preclose", "volume", "amount", "turnover", "pct_change"],
+        [
+            "open",
+            "high",
+            "low",
+            "close",
+            "preclose",
+            "volume",
+            "amount",
+            "turnover",
+            "pct_change",
+            "trade_status",
+        ],
     )
+    df = _add_tradability(df)
     df["source"] = "baostock"
     df["source_priority"] = 10
     df["ingested_at_utc"] = _now_utc()
@@ -194,27 +290,53 @@ def fetch_prices_akshare_em(etf: ETF, start_date: str, end_date: str) -> pd.Data
         df,
         ["open", "high", "low", "close", "volume", "amount", "turnover", "pct_change"],
     )
+    df = _add_tradability(df)
     df["source"] = "akshare:eastmoney:fund_etf_hist_em"
     df["source_priority"] = 20
     df["ingested_at_utc"] = _now_utc()
     return df.reindex(columns=PRICE_COLUMNS)
 
 
-def fetch_prices_with_fallback(etf: ETF, start_date: str, end_date: str) -> tuple[pd.DataFrame, list[str]]:
+def fetch_prices_with_fallback(
+    etf: ETF, start_date: str, end_date: str
+) -> tuple[pd.DataFrame, list[str]]:
+    """Fetch prices and supplement partial primary-source coverage.
+
+    A non-empty primary result is not sufficient if it covers only part of the
+    requested history. Secondary data is fetched only when coverage is
+    materially incomplete, then overlapping dates retain the preferred source.
+    """
     errors: list[str] = []
-    sources: list[tuple[str, Callable[[ETF, str, str], pd.DataFrame]]] = [
-        ("baostock", fetch_prices_baostock),
-        ("akshare:eastmoney", fetch_prices_akshare_em),
-    ]
-    for source_name, fetcher in sources:
+    frames: list[pd.DataFrame] = []
+
+    try:
+        primary = run_with_timeout(
+            fetch_prices_baostock, etf, start_date, end_date, seconds=30
+        )
+        if primary.empty:
+            errors.append(f"{etf.symbol} prices baostock: empty result")
+        else:
+            frames.append(primary)
+    except Exception as exc:
+        primary = _empty(PRICE_COLUMNS)
+        errors.append(f"{etf.symbol} prices baostock: {type(exc).__name__}: {exc}")
+
+    coverage = _price_coverage(primary, start_date, end_date)
+    if bool(coverage["needs_supplement"]):
         try:
-            frame = run_with_timeout(fetcher, etf, start_date, end_date, seconds=30)
-            if not frame.empty:
-                return frame, errors
-            errors.append(f"{etf.symbol} prices {source_name}: empty result")
-        except Exception as exc:  # endpoint failures are recorded, not hidden
-            errors.append(f"{etf.symbol} prices {source_name}: {type(exc).__name__}: {exc}")
-    return _empty(PRICE_COLUMNS), errors
+            fallback = run_with_timeout(
+                fetch_prices_akshare_em, etf, start_date, end_date, seconds=30
+            )
+            if fallback.empty:
+                errors.append(f"{etf.symbol} prices akshare:eastmoney: empty result")
+            else:
+                frames.append(fallback)
+        except Exception as exc:
+            errors.append(
+                f"{etf.symbol} prices akshare:eastmoney: {type(exc).__name__}: {exc}"
+            )
+
+    return _merge_price_frames(frames), errors
 
 
 def fetch_nav_akshare_em(etf: ETF, start_date: str, end_date: str) -> pd.DataFrame:

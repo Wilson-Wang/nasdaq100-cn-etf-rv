@@ -1,198 +1,149 @@
-# Integration with Nasdaq-100 ETF Relative-Value Skill v2.0
+# Integration with Nasdaq-100 ETF Relative-Value Skill v2.1
 
 This repository is the canonical data layer for the downstream `nasdaq100-cn-etf-relative-value` skill.
 
-The skill is **dataset-first** and **multi-source**. It must not assume that all inputs come from Eastmoney, and it must preserve source provenance and point-in-time availability.
+The skill is **dataset-first**, **multi-source**, **point-in-time**, and **coverage-aware**. It must not assume that a non-empty source response covers the requested history, and it must preserve source provenance and availability time.
 
 ## 1. Current tables
 
-The current repository provides:
+The repository currently provides:
 
 - `data/etf_prices.csv` / `.parquet`
 - `data/etf_nav.csv` / `.parquet`
 - `data/etf_snapshot.csv` / `.parquet`
 - `data/manifest.json`
 
-The analysis must read `manifest.json` before running models and must use the **actual table date ranges and aligned pair observation counts**, not the requested lookback range, to determine whether 60/120/250-day model requirements are satisfied.
+The analysis must read `manifest.json` before running models and use actual table date ranges and aligned pair observation counts, not requested lookback length.
 
-## 2. Point-in-time requirements
+## 2. Historical price coverage
+
+Baostock is the preferred daily-price source. AKShare/Eastmoney is a supplement when the primary source fails, returns empty, or materially under-covers the requested interval.
+
+A first-non-empty fallback policy is not acceptable because a truncated primary response can silently leave a large historical hole. When multiple sources overlap, lower `source_priority` wins and the secondary source only fills missing dates.
+
+Each price row now carries `is_tradable`. Pair-model observations should be valid only when both ETF legs are tradable; suspended, zero-volume or invalid-price rows must be excluded from Robust Z history, AR/half-life estimation and executable P&L backtests.
+
+## 3. Point-in-time requirements
 
 The skill must never use information that was unavailable at the signal time.
 
-For NAV, the target schema should eventually distinguish:
+For NAV, the target schema should distinguish:
 
-- `nav_date`: date the NAV belongs to
-- `published_at`: publication time when known
-- `available_at`: first time the value can reasonably be used by the model
-- `pit_verified`: whether the historical availability time has been verified
+- `nav_date`
+- `published_at`
+- `available_at`
+- `pit_verified`
 
 Until historical `available_at` is available, strict NAV-premium backtests must be labeled `PIT_UNVERIFIED` unless a conservative availability rule can be established.
 
-For each pair `(i, j)` at signal time `t`, the premium-spread model should use the latest **common NAV date** for which both NAV values were available by the signal cutoff. Do not mix asynchronously available NAVs and call the result a precise same-time premium spread.
+For each pair `(i, j)` at signal time `t`, the NAV-premium model should use the latest **common NAV date** for which both values were available by the signal cutoff.
 
-## 3. No-lookahead model contract
+## 4. Three-anchor fair-value framework
+
+Skill v2.1 distinguishes three valuation anchors instead of treating official NAV as the only fair-value estimate:
+
+1. **Official NAV** — disclosure and long-history anchor.
+2. **IOPV** — intraday primary/secondary-market reference when available at the same time slice.
+3. **Model Fair Value** — optional point-in-time estimate using a known NAV base, a Nasdaq-100/index proxy factor and an aligned FX factor.
+
+These anchors must not be mixed across the two ETF legs inside one pair spread. If multiple reliable anchors materially disagree on direction, the pair is downgraded to at most `WATCH`.
+
+Target fair-value inputs must preserve source and `available_at` for both the index proxy and FX series.
+
+## 5. No-lookahead model contract
 
 For a signal on day `t`:
 
-- 60-day median/MAD must use observations ending at `t-1`.
-- 120-day AR(1), ADF and half-life must use observations ending at `t-1`.
-- Regime information must include only events published by the signal cutoff.
-- Walk-forward backtests must refit using only information available at each historical signal date.
+- 60-day median/MAD ends at `t-1`.
+- 120-day AR(1), ADF and half-life end at `t-1`.
+- Regime information includes only events/PCF states known by the signal cutoff.
+- Walk-forward backtests refit using only information available at each historical signal date.
+- EOD signals enter no earlier than the next tradable session unless a different execution convention is explicitly modeled.
 
-A day must not be included in the historical window used to score itself.
+## 6. Primary-market regime and PCF
 
-## 4. Historical event definition
+The next dataset extension should add `etf_pcf` with fields such as:
 
-Do not count every consecutive day with `abs(Robust Z) >= 2` as an independent event.
+- `symbol`, `date`
+- `creation_allowed`, `redemption_allowed`
+- `net_creation_limit`, `net_redemption_limit`
+- `creation_unit`
+- `estimated_cash_component`
+- `cash_substitution_limit`
+- `creation_cash_premium`, `redemption_cash_discount`
+- `source`, `available_at`
 
-Default event logic:
+Regime interpretation is directional:
 
-1. New entry when `abs(Z_t) >= 2` and the previous valid day was below 2.
-2. Do not open another event while the current evaluation window is active.
-3. Require a reset below `abs(Z) < 1` before another threshold crossing is counted.
+- creation restrictions weaken high-premium compression trades;
+- redemption restrictions weaken discount-repair trades;
+- both restricted or stale/unknown PCF state can cap a pair at `WATCH` or disable it.
 
-This avoids inflating signal count and historical win rate.
+`etf_events` should also support market-maker additions/removals and primary-market status changes.
 
-## 5. Expected convergence vs realized return
+## 7. Historical event definition and realized return
 
-The AR(1) model may estimate:
+Do not count consecutive `abs(Robust Z) >= 2` days as independent events. A new event requires a threshold crossing and reset below the configured reset level before another event can be counted.
 
-`expected_d_5 = mu + phi^5 * (d_t - mu)`
+AR(1) expected convergence is a forecast, not realized investment return. Historical performance must use executable ETF returns:
 
-and:
+`realized_relative_return = Return(rotation_in) - Return(rotation_out)`
 
-`expected_convergence_5d = abs(d_t - expected_d_5)`
+`realized_net_alpha = realized_relative_return - applicable_cost`
 
-This is a **model forecast of spread convergence**, not realized investment return.
+Cost models must distinguish `rotation_cost` from a complete `round_trip_cost`.
 
-Historical performance must use executable ETF returns. For a signal that rotates from ETF `i` into ETF `j`:
+## 8. Hard gates vs pair ranking
 
-`realized_relative_return = Return(j) - Return(i)`
+Skill v2.1 separates **eligibility** from **ranking**.
 
-and:
-
-`realized_net_alpha = realized_relative_return - realized_cost`
-
-For EOD signals, the default strict backtest should assume the signal is known only after the close and should enter no earlier than the next tradable session.
-
-## 6. Pair-score reproducibility
-
-The downstream skill defines deterministic component mappings for:
-
-- Mispricing (`M`)
-- Mean Reversion (`R`)
-- Expected Edge (`E`)
-- Historical (`H`)
-- Liquidity (`L`)
-- Regime (`G`)
-
-with:
-
-`PairScore = 0.20*M + 0.25*R + 0.25*E + 0.15*H + 0.10*L + 0.05*G`
-
-The data layer should expose enough raw inputs for these components. Analysis code must not improvise alternative scoring formulas from run to run.
-
-## 7. Formal signal minimums
-
-The downstream skill requires, at minimum:
+A formal `TRADE` must pass hard gates for:
 
 - `abs(Robust Z) >= 2.0`
 - `0 < Half-Life < 12`
-- stationarity gate passed
+- stationarity/stability gate
 - `Net Expected Convergence 5d >= 0.8%`
-- `Adjusted Win Rate >= 65%`
-- `PairScore >= 75`
-- no disabling Regime shift
-- at least 120 aligned pair observations for the full model
-- PIT and freshness gates passed
-- no critical source failure affecting the pair
+- historical win-rate gate
+- directionally compatible Regime
+- at least 120 aligned and tradable pair observations
+- walk-forward backtest
+- PIT/freshness/source-quality gates
+- multi-anchor consistency when multiple reliable anchors are available
 
-Strong signals require `PairScore >= 85` plus all other hard gates.
+Only after eligibility passes is `PairScore` used to rank candidates. This avoids treating correlated components such as Z, mean-reversion speed and expected convergence as independent pieces of evidence. `STRONG TRADE` may still require `PairScore >= 85` plus all hard gates.
 
-Missing inputs must never be compensated for by lowering thresholds.
+## 9. Statistical robustness roadmap
 
-## 8. Data-quality state
+For sufficiently long history, downstream research should add:
 
-The skill needs to distinguish:
+- ADF + KPSS joint stationarity diagnostics;
+- structural-break diagnostics such as Zivot-Andrews or equivalent;
+- half-life bootstrap intervals / `P(HL < 12)`;
+- 120-day vs 250-day parameter consistency;
+- genuine out-of-sample tracking from a frozen model version.
 
-- `FRESH`
-- `STALE_NAV`
-- `STALE_PRICE`
-- `PIT_UNVERIFIED`
-- `SOURCE_DEGRADED`
-- `INSUFFICIENT_DATA`
+Each frozen model should record `model_version`, `parameter_hash`, `training_end_date`, `oos_start_date`, and the manifest/checksum used to generate each live signal.
 
-A successful structural validation is not the same as fresh, signal-ready data.
+## 10. Target dataset extensions
 
-If the latest fetch fails for a symbol but cached historical rows remain, the manifest must keep the fetch failure explicit. The skill may continue only if the failed refresh does not affect the current signal inputs; otherwise the pair is downgraded to at most `WATCH`.
+### NAV
+`published_at`, `available_at`, `availability_source`, `pit_verified`.
 
-## 9. Target dataset extensions
+### PCF
+Daily creation/redemption status, limits, substitution parameters, source and availability time.
 
-### NAV fields
+### Fair-value inputs
+Point-in-time Nasdaq-100/index proxy and USD/CNY or USD/CNH series with source and `available_at`.
 
-Add when feasible:
+### Metadata
+AUM, shares, fees, inception date, tracking error, tracking index and effective/available dates.
 
-- `published_at`
-- `available_at`
-- `availability_source`
-- `pit_verified`
+### Events
+Point-in-time event records including `PRIMARY_MARKET_STATUS_CHANGE`, `MARKET_MAKER_ADDED`, and `MARKET_MAKER_REMOVED`.
 
-### `etf_metadata`
-
-Target fields:
-
-- `symbol`
-- `effective_date`
-- `aum`
-- `shares`
-- `management_fee`
-- `custodian_fee`
-- `total_fee`
-- `tracking_error`
-- `inception_date`
-- `tracking_index`
-- `source`
-- `available_at`
-
-### `etf_events`
-
-Target fields:
-
-- `symbol`
-- `event_type`
-- `published_at`
-- `effective_at`
-- `title`
-- `severity`
-- `source`
-- `source_url`
-- `ingested_at_utc`
-
-### `source_runs`
-
-Target fields:
-
-- `run_id`
-- `dataset`
-- `source`
-- `started_at`
-- `finished_at`
-- `success`
-- `rows_fetched`
-- `min_date`
-- `max_date`
-- `error_type`
-- `error_message`
-
-## 10. Product ranking separation
-
-The downstream skill separates:
-
-- **Product Quality Score (PQS)**: fees, liquidity, AUM, tracking error, structural stability.
-- **Tactical Value Score (TVS)**: current relative value, expected convergence, liquidity and Regime.
-
-The data layer should support both, but pair-trade ranking and long-term product-quality ranking remain separate outputs.
+### Source Runs
+Per-run source, timing, success, row count, min/max date and error diagnostics.
 
 ## 11. Current known limitation
 
-The current requested lookback may be longer than the actual available price history. The skill must use the actual `min_date`, `max_date` and aligned pair count from the dataset. It must never infer 250-day coverage merely because the pipeline was asked to fetch 450 calendar days.
+The current requested lookback can be materially longer than actual available price history. Skill v2.1 never infers coverage from request parameters. The new price-source logic attempts to supplement materially partial Baostock history, but successful extension of history still depends on the secondary source actually returning older rows. Validation and downstream models must continue to use actual aligned observations.
