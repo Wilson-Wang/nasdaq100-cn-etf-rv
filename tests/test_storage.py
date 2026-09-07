@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from etf_dataset.storage import upsert_csv
+from etf_dataset.storage import table_summary, upsert_csv
 
 
 def test_upsert_prefers_higher_priority_source(tmp_path):
@@ -57,3 +57,30 @@ def test_upsert_keeps_latest_same_priority(tmp_path):
     upsert_csv(path, first, ["symbol", "data_date"])
     result = upsert_csv(path, second, ["symbol", "data_date"])
     assert float(result.iloc[0]["last"]) == 1.1
+
+
+def test_table_summary_exposes_per_symbol_usable_coverage(tmp_path):
+    path = tmp_path / "prices.csv"
+    dates = pd.bdate_range("2026-01-01", periods=125).strftime("%Y-%m-%d").tolist()
+    rows = []
+    for symbol in ("159941", "513100"):
+        for index, date in enumerate(dates):
+            rows.append(
+                {
+                    "symbol": symbol,
+                    "date": date,
+                    "close": 1.0,
+                    "is_tradable": not (symbol == "513100" and index < 10),
+                    "source": "baostock",
+                }
+            )
+    pd.DataFrame(rows).to_csv(path, index=False)
+
+    summary = table_summary(path, "date")
+
+    assert summary["rows"] == 250
+    assert summary["by_symbol"]["159941"]["tradable_rows"] == 125
+    assert summary["by_symbol"]["159941"]["precheck_120"] is True
+    assert summary["by_symbol"]["513100"]["tradable_rows"] == 115
+    assert summary["by_symbol"]["513100"]["precheck_120"] is False
+    assert summary["by_symbol"]["513100"]["precheck_250"] is False
