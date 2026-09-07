@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T14:33:46+00:00",
+  "generated_at_utc": "2026-09-07T14:42:26+00:00",
   "requested_range": {
     "start": "2025-06-14",
     "end": "2026-09-07"
@@ -27,7 +27,7 @@
       "sources": {
         "baostock": 1980
       },
-      "sha256": "7c93b7f7dae2b8fcee1415f1a7a6abe009c7afebec22d6e91c9cd1845e85119c"
+      "sha256": "c709b45f978907d99cb71db374091ac74a6bbbc24602ad5e10247a00d6998129"
     },
     "nav": {
       "rows": 3612,
@@ -37,7 +37,7 @@
       "sources": {
         "akshare:eastmoney:fund_etf_fund_info_em": 3612
       },
-      "sha256": "38b73794cdef99cdd8a0122592b51a3631335293bdda5ba388039629461ae033"
+      "sha256": "1412f0388f50a76647c464e7acaed9aedabe0e794ae0b1537911997783fb1799"
     },
     "snapshot": {
       "rows": 12,
@@ -47,7 +47,7 @@
       "sources": {
         "akshare:eastmoney:fund_etf_spot_em": 12
       },
-      "sha256": "1ecf2a0f5ba7c55b2860c0dea4faa798a6d4063d62e7c7d026b83809ca7a3cd5"
+      "sha256": "efc1b37797424be79a98a222c96944642448d629c6281dfaa148012b92f19243"
     }
   },
   "parquet_mirrors": [
@@ -56,5 +56,10 @@
     "data/etf_snapshot.parquet"
   ],
   "warnings": [],
-  "failures": []
+  "failures": [
+    "159513 NAV akshare:eastmoney: ReadTimeout: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Read timed out. (read timeout=None)",
+    "159632 NAV akshare:eastmoney: SourceTimeoutError: source call exceeded 30s",
+    "159659 NAV akshare:eastmoney: ConnectionError: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Max retries exceeded with url: /f10/lsjz?fundCode=159659&pageIndex=12&pageSize=20&startDate=2025-06-14&endDate=2026-09-07&_=1788791858021 (Caused by NewConnectionError(\"HTTPSConnection(host='api.fund.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+    "513870 NAV akshare:eastmoney: ReadTimeout: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Read timed out. (read timeout=None)"
+  ]
 }
