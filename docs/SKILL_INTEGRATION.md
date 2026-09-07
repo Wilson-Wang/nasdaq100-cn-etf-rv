@@ -15,6 +15,8 @@ The repository currently provides:
 
 The analysis must read `manifest.json` before running models and use actual table date ranges and aligned pair observation counts, not requested lookback length.
 
+`manifest.json` exposes both table-level summaries and `by_symbol` coverage. **Do not use a table-wide `min_date` as evidence that every ETF reaches that date.** A single successfully backfilled symbol can extend the global minimum while other symbols remain much shorter. For prechecks, inspect each symbol's `rows`, `tradable_rows`, `min_date`, `max_date`, `sources`, `precheck_120`, and `precheck_250`; formal pair eligibility still uses the aligned, tradable pair count.
+
 ## 2. Historical price coverage
 
 Baostock is the preferred daily-price source. AKShare/Eastmoney is a supplement when the primary source fails, returns empty, or materially under-covers the requested interval.
@@ -22,6 +24,8 @@ Baostock is the preferred daily-price source. AKShare/Eastmoney is a supplement 
 A first-non-empty fallback policy is not acceptable because a truncated primary response can silently leave a large historical hole. When multiple sources overlap, lower `source_priority` wins and the secondary source only fills missing dates.
 
 Each price row now carries `is_tradable`. Pair-model observations should be valid only when both ETF legs are tradable; suspended, zero-volume or invalid-price rows must be excluded from Robust Z history, AR/half-life estimation and executable P&L backtests.
+
+Validation distinguishes the 120-observation formal-model minimum from the 250-observation research-depth target. Fewer than 250 usable observations is an explicit warning, not a silent success.
 
 ## 3. Point-in-time requirements
 
@@ -146,4 +150,4 @@ Per-run source, timing, success, row count, min/max date and error diagnostics.
 
 ## 11. Current known limitation
 
-The current requested lookback can be materially longer than actual available price history. Skill v2.1 never infers coverage from request parameters. The new price-source logic attempts to supplement materially partial Baostock history, but successful extension of history still depends on the secondary source actually returning older rows. Validation and downstream models must continue to use actual aligned observations.
+Coverage-aware supplementation is now implemented, but the secondary endpoint can itself fail transiently. Therefore a run can improve history for only a subset of symbols. Such partial success is valid and retained, but it must remain explicit through `by_symbol` coverage and source-failure records; downstream analysis must never promote global table coverage into pair-level readiness.
