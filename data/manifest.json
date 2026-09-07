@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T14:42:26+00:00",
+  "generated_at_utc": "2026-09-07T15:45:29+00:00",
   "requested_range": {
     "start": "2025-06-14",
     "end": "2026-09-07"
@@ -20,14 +20,15 @@
   ],
   "tables": {
     "prices": {
-      "rows": 1980,
+      "rows": 2117,
       "symbols": 12,
-      "min_date": "2026-01-05",
+      "min_date": "2025-06-16",
       "max_date": "2026-09-07",
       "sources": {
-        "baostock": 1980
+        "baostock": 1980,
+        "akshare:eastmoney:fund_etf_hist_em": 137
       },
-      "sha256": "c709b45f978907d99cb71db374091ac74a6bbbc24602ad5e10247a00d6998129"
+      "sha256": "f0adf7f6272447bdbc0ff453a9342776bbb566b5362db56b92c2fde1f4e89bde"
     },
     "nav": {
       "rows": 3612,
@@ -37,7 +38,7 @@
       "sources": {
         "akshare:eastmoney:fund_etf_fund_info_em": 3612
       },
-      "sha256": "1412f0388f50a76647c464e7acaed9aedabe0e794ae0b1537911997783fb1799"
+      "sha256": "2aa6fbf7bfaebc6e90ae97073668175c602e62dc75ffb5f7537e0d417a87e394"
     },
     "snapshot": {
       "rows": 12,
@@ -47,7 +48,7 @@
       "sources": {
         "akshare:eastmoney:fund_etf_spot_em": 12
       },
-      "sha256": "efc1b37797424be79a98a222c96944642448d629c6281dfaa148012b92f19243"
+      "sha256": "5720954ba38b5a7ff9ce7f3e191805d32c50df2f6a2cc672aa6baff7f67c9422"
     }
   },
   "parquet_mirrors": [
@@ -57,9 +58,20 @@
   ],
   "warnings": [],
   "failures": [
+    "159501 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159501 NAV akshare:eastmoney: ReadTimeout: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Read timed out. (read timeout=None)",
+    "159513 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159513 NAV akshare:eastmoney: ReadTimeout: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Read timed out. (read timeout=None)",
-    "159632 NAV akshare:eastmoney: SourceTimeoutError: source call exceeded 30s",
-    "159659 NAV akshare:eastmoney: ConnectionError: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Max retries exceeded with url: /f10/lsjz?fundCode=159659&pageIndex=12&pageSize=20&startDate=2025-06-14&endDate=2026-09-07&_=1788791858021 (Caused by NewConnectionError(\"HTTPSConnection(host='api.fund.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
-    "513870 NAV akshare:eastmoney: ReadTimeout: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Read timed out. (read timeout=None)"
+    "159632 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159659 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159660 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159696 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159696 NAV akshare:eastmoney: ConnectionError: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Max retries exceeded with url: /f10/lsjz?fundCode=159696&pageIndex=14&pageSize=20&startDate=2025-06-14&endDate=2026-09-07&_=1788795718155 (Caused by NewConnectionError(\"HTTPSConnection(host='api.fund.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+    "513100 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "513110 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "513300 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "513390 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "513390 NAV akshare:eastmoney: ConnectionError: HTTPSConnectionPool(host='api.fund.eastmoney.com', port=443): Max retries exceeded with url: /f10/lsjz?fundCode=513390&pageIndex=15&pageSize=20&startDate=2025-06-14&endDate=2026-09-07&_=1788795833526 (Caused by NewConnectionError(\"HTTPSConnection(host='api.fund.eastmoney.com', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable\"))",
+    "513870 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
   ]
 }
