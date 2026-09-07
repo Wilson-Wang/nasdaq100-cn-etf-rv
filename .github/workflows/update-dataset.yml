@@ -30,7 +30,7 @@ jobs:
         run: python scripts/validate_dataset.py
       - name: Commit changed dataset
         run: |
-          if git diff --quiet -- data; then
+          if [ -z "$(git status --porcelain -- data)" ]; then
             echo "No dataset changes"
             exit 0
           fi
