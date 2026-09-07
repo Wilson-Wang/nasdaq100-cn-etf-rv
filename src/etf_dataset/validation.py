@@ -44,6 +44,30 @@ def validate_prices(path: str | Path) -> list[str]:
             "fewer than 120 price observations: "
             + ", ".join(f"{k}={v}" for k, v in short.items())
         )
+
+    if "is_tradable" in df.columns:
+        normalized = (
+            df["is_tradable"]
+            .astype("string")
+            .str.strip()
+            .str.lower()
+            .map({"true": True, "false": False, "1": True, "0": False})
+        )
+        non_tradable = df.loc[normalized.eq(False)].groupby("symbol")["date"].nunique()
+        if not non_tradable.empty:
+            warnings.append(
+                "non-tradable price observations must be excluded from pair models: "
+                + ", ".join(f"{k}={v}" for k, v in non_tradable.items())
+            )
+    elif "volume" in df.columns:
+        volume = pd.to_numeric(df["volume"], errors="coerce")
+        zero_volume = df.loc[volume.le(0)].groupby("symbol")["date"].nunique()
+        if not zero_volume.empty:
+            warnings.append(
+                "zero-volume price observations found; derive is_tradable before pair modeling: "
+                + ", ".join(f"{k}={v}" for k, v in zero_volume.items())
+            )
+
     return warnings
 
 
