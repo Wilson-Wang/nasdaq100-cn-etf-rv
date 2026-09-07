@@ -7,7 +7,12 @@ from pathlib import Path
 import pandas as pd
 
 from .config import load_universe
-from .sources import fetch_nav_akshare_em, fetch_prices_with_fallback, fetch_snapshot_akshare_em
+from .sources import (
+    fetch_nav_akshare_em,
+    fetch_prices_with_fallback,
+    fetch_snapshot_akshare_em,
+    run_with_timeout,
+)
 from .storage import table_summary, upsert_csv, write_manifest, write_parquet_mirror
 from .validation import validate_nav, validate_prices, validate_snapshot
 
@@ -34,14 +39,22 @@ def update_dataset(
     price_frames: list[pd.DataFrame] = []
     nav_frames: list[pd.DataFrame] = []
 
-    for etf in universe:
+    for index, etf in enumerate(universe, start=1):
+        print(f"[{index}/{len(universe)}] {etf.symbol} prices", flush=True)
         prices, price_errors = fetch_prices_with_fallback(etf, start_date, end_date)
         failures.extend(price_errors)
         if not prices.empty:
             price_frames.append(prices)
 
+        print(f"[{index}/{len(universe)}] {etf.symbol} NAV", flush=True)
         try:
-            nav = fetch_nav_akshare_em(etf, start_date, end_date)
+            nav = run_with_timeout(
+                fetch_nav_akshare_em,
+                etf,
+                start_date,
+                end_date,
+                seconds=30,
+            )
             if nav.empty:
                 failures.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
             else:
@@ -53,8 +66,9 @@ def update_dataset(
     nav_in = pd.concat(nav_frames, ignore_index=True) if nav_frames else pd.DataFrame()
 
     symbols = {etf.symbol for etf in universe}
+    print("fetching latest ETF snapshot", flush=True)
     try:
-        snapshot_in = fetch_snapshot_akshare_em(symbols)
+        snapshot_in = run_with_timeout(fetch_snapshot_akshare_em, symbols, seconds=45)
         if snapshot_in.empty:
             failures.append("snapshot akshare:eastmoney: empty result")
     except Exception as exc:
