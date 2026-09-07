@@ -60,10 +60,63 @@ def sha256_file(path: str | Path) -> str:
     return digest.hexdigest()
 
 
+def _bool_series(series: pd.Series) -> pd.Series:
+    """Normalize CSV boolean values without treating missing values as tradable."""
+    return (
+        series.astype("string")
+        .str.strip()
+        .str.lower()
+        .map({"true": True, "false": False, "1": True, "0": False})
+        .fillna(False)
+        .astype(bool)
+    )
+
+
+def _symbol_summary(df: pd.DataFrame, date_column: str) -> dict[str, dict]:
+    if "symbol" not in df.columns:
+        return {}
+
+    summaries: dict[str, dict] = {}
+    for symbol, group in df.groupby("symbol", sort=True, dropna=False):
+        symbol_key = str(symbol)
+        valid_dates = (
+            pd.to_datetime(group[date_column], errors="coerce")
+            if date_column in group.columns
+            else pd.Series(dtype="datetime64[ns]")
+        )
+        valid_dates = valid_dates.dropna()
+
+        if "is_tradable" in group.columns:
+            tradable_rows = int(_bool_series(group["is_tradable"]).sum())
+        else:
+            tradable_rows = None
+
+        observation_rows = tradable_rows if tradable_rows is not None else int(len(group))
+        summaries[symbol_key] = {
+            "rows": int(len(group)),
+            "tradable_rows": tradable_rows,
+            "min_date": valid_dates.min().strftime("%Y-%m-%d") if not valid_dates.empty else None,
+            "max_date": valid_dates.max().strftime("%Y-%m-%d") if not valid_dates.empty else None,
+            "sources": group["source"].value_counts(dropna=False).astype(int).to_dict()
+            if "source" in group.columns
+            else {},
+            "precheck_120": observation_rows >= 120,
+            "precheck_250": observation_rows >= 250,
+        }
+    return summaries
+
+
 def table_summary(path: str | Path, date_column: str) -> dict:
     path = Path(path)
     if not path.exists() or path.stat().st_size == 0:
-        return {"rows": 0, "symbols": 0, "min_date": None, "max_date": None, "sources": {}}
+        return {
+            "rows": 0,
+            "symbols": 0,
+            "min_date": None,
+            "max_date": None,
+            "sources": {},
+            "by_symbol": {},
+        }
     df = pd.read_csv(path, dtype={"symbol": "string"})
     return {
         "rows": int(len(df)),
@@ -73,6 +126,7 @@ def table_summary(path: str | Path, date_column: str) -> dict:
         "sources": df["source"].value_counts(dropna=False).astype(int).to_dict()
         if "source" in df.columns
         else {},
+        "by_symbol": _symbol_summary(df, date_column),
         "sha256": sha256_file(path),
     }
 
