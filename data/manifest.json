@@ -1,0 +1,60 @@
+{
+  "generated_at_utc": "2026-09-07T14:33:46+00:00",
+  "requested_range": {
+    "start": "2025-06-14",
+    "end": "2026-09-07"
+  },
+  "universe": [
+    "159941",
+    "159501",
+    "159513",
+    "159632",
+    "159659",
+    "159660",
+    "159696",
+    "513100",
+    "513110",
+    "513300",
+    "513390",
+    "513870"
+  ],
+  "tables": {
+    "prices": {
+      "rows": 1980,
+      "symbols": 12,
+      "min_date": "2026-01-05",
+      "max_date": "2026-09-07",
+      "sources": {
+        "baostock": 1980
+      },
+      "sha256": "7c93b7f7dae2b8fcee1415f1a7a6abe009c7afebec22d6e91c9cd1845e85119c"
+    },
+    "nav": {
+      "rows": 3612,
+      "symbols": 12,
+      "min_date": "2025-06-16",
+      "max_date": "2026-09-04",
+      "sources": {
+        "akshare:eastmoney:fund_etf_fund_info_em": 3612
+      },
+      "sha256": "38b73794cdef99cdd8a0122592b51a3631335293bdda5ba388039629461ae033"
+    },
+    "snapshot": {
+      "rows": 12,
+      "symbols": 12,
+      "min_date": "2026-09-07",
+      "max_date": "2026-09-07",
+      "sources": {
+        "akshare:eastmoney:fund_etf_spot_em": 12
+      },
+      "sha256": "1ecf2a0f5ba7c55b2860c0dea4faa798a6d4063d62e7c7d026b83809ca7a3cd5"
+    }
+  },
+  "parquet_mirrors": [
+    "data/etf_prices.parquet",
+    "data/etf_nav.parquet",
+    "data/etf_snapshot.parquet"
+  ],
+  "warnings": [],
+  "failures": []
+}
