@@ -1,0 +1,14 @@
+[
+  {"symbol":"159941","exchange":"sz","name":"广发纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159501","exchange":"sz","name":"嘉实纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159513","exchange":"sz","name":"大成纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159632","exchange":"sz","name":"华安纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159659","exchange":"sz","name":"招商纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159660","exchange":"sz","name":"汇添富纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"159696","exchange":"sz","name":"易方达纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"513100","exchange":"sh","name":"国泰纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"513110","exchange":"sh","name":"华泰柏瑞纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"513300","exchange":"sh","name":"华夏纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"513390","exchange":"sh","name":"博时纳斯达克100ETF","index":"NASDAQ-100"},
+  {"symbol":"513870","exchange":"sh","name":"富国纳斯达克100ETF","index":"NASDAQ-100"}
+]
