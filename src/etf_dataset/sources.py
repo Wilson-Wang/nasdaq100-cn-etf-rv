@@ -1,11 +1,39 @@
 from __future__ import annotations
 
+import signal
+import socket
 from datetime import datetime, timezone
-from typing import Callable
+from typing import Callable, TypeVar
 
 import pandas as pd
 
 from .config import ETF
+
+
+T = TypeVar("T")
+
+
+class SourceTimeoutError(TimeoutError):
+    """Raised when an external market-data call exceeds its time budget."""
+
+
+def run_with_timeout(func: Callable[..., T], *args, seconds: int = 30) -> T:
+    """Run a blocking source call with a hard timeout on Unix runners."""
+    if not hasattr(signal, "SIGALRM"):
+        return func(*args)
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def _handle_timeout(_signum, _frame):
+        raise SourceTimeoutError(f"source call exceeded {seconds}s")
+
+    signal.signal(signal.SIGALRM, _handle_timeout)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        return func(*args)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
 
 
 PRICE_COLUMNS = [
@@ -76,15 +104,19 @@ def _to_numeric(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
 def fetch_prices_baostock(etf: ETF, start_date: str, end_date: str) -> pd.DataFrame:
     import baostock as bs
 
-    login = bs.login()
-    if login.error_code != "0":
-        raise RuntimeError(f"baostock login failed: {login.error_code} {login.error_msg}")
-
-    fields = (
-        "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,"
-        "tradestatus,pctChg"
-    )
+    previous_socket_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(10)
+    logged_in = False
     try:
+        login = bs.login()
+        if login.error_code != "0":
+            raise RuntimeError(f"baostock login failed: {login.error_code} {login.error_msg}")
+        logged_in = True
+
+        fields = (
+            "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,"
+            "tradestatus,pctChg"
+        )
         rs = bs.query_history_k_data_plus(
             etf.baostock_code,
             fields,
@@ -99,7 +131,12 @@ def fetch_prices_baostock(etf: ETF, start_date: str, end_date: str) -> pd.DataFr
         while rs.next():
             rows.append(rs.get_row_data())
     finally:
-        bs.logout()
+        if logged_in:
+            try:
+                bs.logout()
+            except Exception:
+                pass
+        socket.setdefaulttimeout(previous_socket_timeout)
 
     if not rows:
         return _empty(PRICE_COLUMNS)
@@ -171,7 +208,7 @@ def fetch_prices_with_fallback(etf: ETF, start_date: str, end_date: str) -> tupl
     ]
     for source_name, fetcher in sources:
         try:
-            frame = fetcher(etf, start_date, end_date)
+            frame = run_with_timeout(fetcher, etf, start_date, end_date, seconds=30)
             if not frame.empty:
                 return frame, errors
             errors.append(f"{etf.symbol} prices {source_name}: empty result")
