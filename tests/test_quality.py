@@ -5,7 +5,14 @@ import pandas as pd
 from etf_dataset.quality import build_quality_report
 
 
-def _write_frames(tmp_path, *, pit_verified: bool = True, snapshot_date: str = "2026-09-08"):
+def _write_frames(
+    tmp_path,
+    *,
+    pit_verified: bool = True,
+    snapshot_date: str = "2026-09-08",
+    subscription_status: str | None = None,
+    redemption_status: str | None = None,
+):
     price_dates = pd.bdate_range(end="2026-09-08", periods=125)
     prices = pd.DataFrame(
         {
@@ -24,6 +31,8 @@ def _write_frames(tmp_path, *, pit_verified: bool = True, snapshot_date: str = "
                 "nav_date": "2026-09-04",
                 "unit_nav": 1.0,
                 "pit_verified": pit_verified,
+                "subscription_status": subscription_status,
+                "redemption_status": redemption_status,
                 "source": "eastmoney",
             }
         ]
@@ -112,3 +121,49 @@ def test_quality_report_marks_degraded_source_critical_when_current_input_is_sta
     assert "CRITICAL_SOURCE_FAILURE" in item["states"]
     assert item["critical_source_failure"] is True
     assert item["formal_signal_ready"] is False
+
+
+def test_nav_status_fallback_promotes_only_explicit_restrictions(tmp_path):
+    prices_path, nav_path, snapshot_path = _write_frames(
+        tmp_path,
+        subscription_status="暂停申购",
+        redemption_status="场内卖出",
+    )
+
+    report = build_quality_report(
+        prices_path,
+        nav_path,
+        snapshot_path,
+        ["513100"],
+        "2026-09-08",
+        [],
+    )
+
+    item = report["by_symbol"]["513100"]
+    assert item["primary_market"]["creation_state"] == "RESTRICTED"
+    assert item["primary_market"]["redemption_state"] == "UNKNOWN"
+    assert item["primary_market"]["confidence"] == "LOW"
+    assert "CREATION_RESTRICTED_BY_NAV_STATUS" in item["states"]
+    assert "REDEMPTION_RESTRICTED_BY_NAV_STATUS" not in item["states"]
+
+
+def test_secondary_market_labels_are_not_misclassified_as_primary_market_open(tmp_path):
+    prices_path, nav_path, snapshot_path = _write_frames(
+        tmp_path,
+        subscription_status="场内买入",
+        redemption_status="场内卖出",
+    )
+
+    report = build_quality_report(
+        prices_path,
+        nav_path,
+        snapshot_path,
+        ["513100"],
+        "2026-09-08",
+        [],
+    )
+
+    item = report["by_symbol"]["513100"]
+    assert item["primary_market"]["creation_state"] == "UNKNOWN"
+    assert item["primary_market"]["redemption_state"] == "UNKNOWN"
+    assert "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE" in item["states"]
