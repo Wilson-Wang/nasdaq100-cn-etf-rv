@@ -22,6 +22,21 @@ def _default_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _add_unverified_nav_pit_fields(nav: pd.DataFrame) -> pd.DataFrame:
+    """Persist explicit PIT-unknown state until a source proves availability time."""
+    nav = nav.copy()
+    defaults = {
+        "published_at": pd.NA,
+        "available_at": pd.NA,
+        "availability_source": "unverified",
+        "pit_verified": False,
+    }
+    for column, value in defaults.items():
+        if column not in nav.columns:
+            nav[column] = value
+    return nav
+
+
 def update_dataset(
     root: Path,
     start_date: str,
@@ -59,7 +74,7 @@ def update_dataset(
             if nav.empty:
                 failures.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
             else:
-                nav_frames.append(nav)
+                nav_frames.append(_add_unverified_nav_pit_fields(nav))
         except Exception as exc:
             failures.append(f"{etf.symbol} NAV akshare:eastmoney: {type(exc).__name__}: {exc}")
 
