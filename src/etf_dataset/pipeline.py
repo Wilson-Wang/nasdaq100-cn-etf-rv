@@ -7,6 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 from .config import load_universe
+from .quality import build_quality_report
 from .sources import (
     fetch_nav_akshare_em,
     fetch_prices_with_fallback,
@@ -19,6 +20,21 @@ from .validation import validate_nav, validate_prices, validate_snapshot
 
 def _default_root() -> Path:
     return Path(__file__).resolve().parents[2]
+
+
+def _add_unverified_nav_pit_fields(nav: pd.DataFrame) -> pd.DataFrame:
+    """Persist explicit PIT-unknown state until a source proves availability time."""
+    nav = nav.copy()
+    defaults = {
+        "published_at": pd.NA,
+        "available_at": pd.NA,
+        "availability_source": "unverified",
+        "pit_verified": False,
+    }
+    for column, value in defaults.items():
+        if column not in nav.columns:
+            nav[column] = value
+    return nav
 
 
 def update_dataset(
@@ -58,7 +74,7 @@ def update_dataset(
             if nav.empty:
                 failures.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
             else:
-                nav_frames.append(nav)
+                nav_frames.append(_add_unverified_nav_pit_fields(nav))
         except Exception as exc:
             failures.append(f"{etf.symbol} NAV akshare:eastmoney: {type(exc).__name__}: {exc}")
 
@@ -96,15 +112,27 @@ def update_dataset(
     warnings.extend(validate_nav(nav_path))
     warnings.extend(validate_snapshot(snapshot_path))
 
+    tables = {
+        "prices": table_summary(prices_path, "date"),
+        "nav": table_summary(nav_path, "nav_date"),
+        "snapshot": table_summary(snapshot_path, "data_date"),
+    }
+    universe_symbols = [etf.symbol for etf in universe]
+    quality = build_quality_report(
+        prices_path=prices_path,
+        nav_path=nav_path,
+        snapshot_path=snapshot_path,
+        universe_symbols=universe_symbols,
+        as_of_date=end_date,
+        failures=failures,
+    )
+
     manifest = {
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         "requested_range": {"start": start_date, "end": end_date},
-        "universe": [etf.symbol for etf in universe],
-        "tables": {
-            "prices": table_summary(prices_path, "date"),
-            "nav": table_summary(nav_path, "nav_date"),
-            "snapshot": table_summary(snapshot_path, "data_date"),
-        },
+        "universe": universe_symbols,
+        "tables": tables,
+        "quality": quality,
         "parquet_mirrors": parquet_paths,
         "warnings": warnings,
         "failures": failures,
@@ -139,6 +167,7 @@ def main() -> int:
         f"updated prices={manifest['tables']['prices']['rows']} "
         f"nav={manifest['tables']['nav']['rows']} "
         f"snapshot={manifest['tables']['snapshot']['rows']} "
+        f"formal_ready={len(manifest['quality']['formal_signal_ready_symbols'])} "
         f"failures={len(manifest['failures'])}"
     )
     return 0

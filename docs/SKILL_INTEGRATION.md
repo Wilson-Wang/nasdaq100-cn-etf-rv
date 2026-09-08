@@ -1,4 +1,4 @@
-# Integration with Nasdaq-100 ETF Relative-Value Skill v2.1
+# Integration with Nasdaq-100 ETF Relative-Value Skill v2.1.1
 
 This repository is the canonical data layer for the downstream `nasdaq100-cn-etf-relative-value` skill.
 
@@ -16,6 +16,33 @@ The repository currently provides:
 The analysis must read `manifest.json` before running models and use actual table date ranges and aligned pair observation counts, not requested lookback length.
 
 `manifest.json` exposes both table-level summaries and `by_symbol` coverage. **Do not use a table-wide `min_date` as evidence that every ETF reaches that date.** A single successfully backfilled symbol can extend the global minimum while other symbols remain much shorter. For prechecks, inspect each symbol's `rows`, `tradable_rows`, `min_date`, `max_date`, `sources`, `precheck_120`, and `precheck_250`; formal pair eligibility still uses the aligned, tradable pair count.
+
+### 1.1 Signal-readiness quality object
+
+The manifest also exposes a `quality` object that is deliberately separate from structural validation. A CSV can be structurally valid while still being stale, point-in-time unverified, or degraded by a failed latest fetch.
+
+For every symbol, `quality.by_symbol` includes:
+
+- `usable_price_observations`
+- latest price/NAV/snapshot dates
+- weekday-based freshness lags
+- `pit_verified`
+- `source_degraded`
+- `critical_source_failure`
+- state labels such as `LIMITED_RESEARCH_DEPTH`, `STALE_PRICE`, `STALE_NAV`, `STALE_SNAPSHOT`, `PIT_UNVERIFIED`, `SOURCE_DEGRADED`
+- `formal_signal_ready`
+
+Freshness is currently a conservative **weekday heuristic**, not a full China-exchange holiday calendar. The manifest records the method and thresholds so downstream analysis cannot mistake it for a hidden exact calendar.
+
+A source failure does not automatically become critical. If fallback/cached data still covers the required current inputs, the symbol remains `SOURCE_DEGRADED` but the failure is not marked critical. It becomes `CRITICAL_SOURCE_FAILURE` when the degraded fetch coincides with a stale or absent price, NAV or snapshot input.
+
+Current strict freshness prechecks are:
+
+- price: no weekday lag from the requested EOD `as_of_date`;
+- NAV: at most 2 weekday lags;
+- snapshot: no weekday lag.
+
+Strict NAV-premium `formal_signal_ready` additionally requires `pit_verified=true`. The current NAV adapter does not yet prove historical publication/availability time, so refreshed NAV rows explicitly persist `pit_verified=false`, `availability_source=unverified`, and empty `published_at` / `available_at` until a source can substantiate those fields.
 
 ## 2. Historical price coverage
 
@@ -44,7 +71,7 @@ For each pair `(i, j)` at signal time `t`, the NAV-premium model should use the 
 
 ## 4. Three-anchor fair-value framework
 
-Skill v2.1 distinguishes three valuation anchors instead of treating official NAV as the only fair-value estimate:
+Skill v2.1.1 distinguishes three valuation anchors instead of treating official NAV as the only fair-value estimate:
 
 1. **Official NAV** — disclosure and long-history anchor.
 2. **IOPV** — intraday primary/secondary-market reference when available at the same time slice.
@@ -99,7 +126,7 @@ Cost models must distinguish `rotation_cost` from a complete `round_trip_cost`.
 
 ## 8. Hard gates vs pair ranking
 
-Skill v2.1 separates **eligibility** from **ranking**.
+Skill v2.1.1 separates **eligibility** from **ranking**.
 
 A formal `TRADE` must pass hard gates for:
 
@@ -150,4 +177,4 @@ Per-run source, timing, success, row count, min/max date and error diagnostics.
 
 ## 11. Current known limitation
 
-Coverage-aware supplementation is now implemented, but the secondary endpoint can itself fail transiently. Therefore a run can improve history for only a subset of symbols. Such partial success is valid and retained, but it must remain explicit through `by_symbol` coverage and source-failure records; downstream analysis must never promote global table coverage into pair-level readiness.
+Coverage-aware supplementation is now implemented, but the secondary endpoint can itself fail transiently. Therefore a run can improve history for only a subset of symbols. Such partial success is valid and retained, but it must remain explicit through `by_symbol` coverage, `quality.by_symbol`, and source-failure records; downstream analysis must never promote global table coverage into pair-level readiness.
