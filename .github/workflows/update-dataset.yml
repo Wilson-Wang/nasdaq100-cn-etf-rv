@@ -29,6 +29,8 @@ jobs:
         run: pip install -e .
       - name: Update dataset
         run: python scripts/update_dataset.py --lookback-days 450
+      - name: Update execution readiness
+        run: python scripts/update_execution_readiness.py
       - name: Validate
         run: python scripts/validate_dataset.py
       - name: Commit changed dataset
