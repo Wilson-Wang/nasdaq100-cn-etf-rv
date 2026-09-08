@@ -106,13 +106,57 @@ def validate_nav(path: str | Path) -> list[str]:
     nav = pd.to_numeric(df["unit_nav"], errors="coerce")
     if (nav.dropna() <= 0).any():
         raise ValidationError("NAV contains non-positive unit_nav")
+
+    if "available_at" not in df.columns or "pit_verified" not in df.columns:
+        warnings.append(
+            "NAV point-in-time availability is unverified; strict historical premium backtests "
+            "must not be treated as signal-ready"
+        )
+    else:
+        verified = _normalize_bool(df["pit_verified"])
+        verified_counts = df.loc[verified].groupby("symbol")["nav_date"].nunique()
+        all_symbols = pd.Index(df["symbol"].dropna().unique(), dtype="string")
+        verified_counts = verified_counts.reindex(all_symbols, fill_value=0).sort_index()
+        unverified_symbols = verified_counts[verified_counts == 0]
+        if not unverified_symbols.empty:
+            warnings.append(
+                "no PIT-verified NAV observations: " + _format_counts(unverified_symbols)
+            )
+
     return warnings
 
 
 def validate_snapshot(path: str | Path) -> list[str]:
     df = _load(Path(path))
+    warnings: list[str] = []
     if df.empty:
         return ["snapshot dataset is empty"]
+
+    required = {"symbol", "data_date", "last", "source"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValidationError(f"snapshot missing columns: {sorted(missing)}")
     if df.duplicated(["symbol", "data_date"]).any():
         raise ValidationError("snapshot contains duplicate symbol/data_date keys")
-    return []
+
+    if "iopv" not in df.columns:
+        warnings.append("snapshot has no IOPV field; intraday fair-value checks are unavailable")
+    else:
+        iopv = pd.to_numeric(df["iopv"], errors="coerce")
+        missing_iopv = df.loc[iopv.isna() | iopv.le(0), "symbol"].dropna().unique()
+        if len(missing_iopv):
+            warnings.append("snapshot missing usable IOPV: " + ", ".join(sorted(missing_iopv)))
+
+    if not {"bid1", "ask1"}.issubset(df.columns):
+        warnings.append("snapshot has no complete bid1/ask1 fields; spread cost is unavailable")
+    else:
+        bid = pd.to_numeric(df["bid1"], errors="coerce")
+        ask = pd.to_numeric(df["ask1"], errors="coerce")
+        bad_quote = bid.isna() | ask.isna() | bid.le(0) | ask.le(0) | ask.lt(bid)
+        missing_quote = df.loc[bad_quote, "symbol"].dropna().unique()
+        if len(missing_quote):
+            warnings.append(
+                "snapshot missing usable bid/ask: " + ", ".join(sorted(missing_quote))
+            )
+
+    return warnings
