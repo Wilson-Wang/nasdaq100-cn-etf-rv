@@ -120,6 +120,7 @@ def update_dataset(
         "snapshot": table_summary(snapshot_path, "data_date"),
     }
     universe_symbols = [etf.symbol for etf in universe]
+    generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     quality = build_quality_report(
         prices_path=prices_path,
         nav_path=nav_path,
@@ -127,10 +128,11 @@ def update_dataset(
         universe_symbols=universe_symbols,
         as_of_date=end_date,
         failures=failures,
+        observed_at_utc=generated_at,
     )
 
     manifest = {
-        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "generated_at_utc": generated_at,
         "requested_range": {"start": start_date, "end": end_date},
         "universe": universe_symbols,
         "tables": tables,
