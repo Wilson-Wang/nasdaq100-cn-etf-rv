@@ -5,15 +5,20 @@ import pandas as pd
 from etf_dataset.quality import build_quality_report
 
 
+AFTER_CLOSE_UTC = "2026-09-08T08:30:00+00:00"  # 16:30 Asia/Shanghai
+BEFORE_OPEN_UTC = "2026-09-08T00:30:00+00:00"  # 08:30 Asia/Shanghai
+
+
 def _write_frames(
     tmp_path,
     *,
     pit_verified: bool = True,
+    price_end: str = "2026-09-08",
     snapshot_date: str = "2026-09-08",
     subscription_status: str | None = None,
     redemption_status: str | None = None,
 ):
-    price_dates = pd.bdate_range(end="2026-09-08", periods=125)
+    price_dates = pd.bdate_range(end=price_end, periods=125)
     prices = pd.DataFrame(
         {
             "symbol": ["513100"] * len(price_dates),
@@ -57,19 +62,24 @@ def _write_frames(
     return prices_path, nav_path, snapshot_path
 
 
-def test_quality_report_separates_research_depth_from_signal_readiness(tmp_path):
-    prices_path, nav_path, snapshot_path = _write_frames(tmp_path, pit_verified=True)
-
-    report = build_quality_report(
+def _report(paths, *, observed_at=AFTER_CLOSE_UTC, failures=None):
+    prices_path, nav_path, snapshot_path = paths
+    return build_quality_report(
         prices_path,
         nav_path,
         snapshot_path,
         ["513100"],
         "2026-09-08",
-        [],
+        failures or [],
+        observed_at_utc=observed_at,
     )
 
+
+def test_quality_report_separates_research_depth_from_signal_readiness(tmp_path):
+    report = _report(_write_frames(tmp_path, pit_verified=True))
+
     item = report["by_symbol"]["513100"]
+    assert report["model_as_of_date"] == "2026-09-08"
     assert item["usable_price_observations"] == 125
     assert "LIMITED_RESEARCH_DEPTH" in item["states"]
     assert item["price_lag_business_days"] == 0
@@ -78,16 +88,41 @@ def test_quality_report_separates_research_depth_from_signal_readiness(tmp_path)
     assert report["formal_signal_ready_symbols"] == ["513100"]
 
 
-def test_quality_report_keeps_noncritical_source_degradation_separate(tmp_path):
-    prices_path, nav_path, snapshot_path = _write_frames(tmp_path, pit_verified=False)
+def test_preclose_refresh_uses_previous_completed_weekday(tmp_path):
+    paths = _write_frames(
+        tmp_path,
+        pit_verified=True,
+        price_end="2026-09-07",
+        snapshot_date="2026-09-07",
+    )
+    report = _report(paths, observed_at=BEFORE_OPEN_UTC)
 
-    report = build_quality_report(
-        prices_path,
-        nav_path,
-        snapshot_path,
-        ["513100"],
-        "2026-09-08",
-        ["513100 NAV eastmoney: ReadTimeout"],
+    item = report["by_symbol"]["513100"]
+    assert report["as_of_date"] == "2026-09-08"
+    assert report["model_as_of_date"] == "2026-09-07"
+    assert item["price_last_date"] == "2026-09-07"
+    assert item["price_lag_business_days"] == 0
+    assert item["snapshot_last_date"] == "2026-09-07"
+    assert item["snapshot_lag_business_days"] == 0
+    assert "STALE_PRICE" not in item["states"]
+    assert "STALE_SNAPSHOT" not in item["states"]
+
+
+def test_preclose_quality_excludes_future_same_day_rows(tmp_path):
+    paths = _write_frames(tmp_path, pit_verified=True)
+    report = _report(paths, observed_at=BEFORE_OPEN_UTC)
+
+    item = report["by_symbol"]["513100"]
+    assert report["model_as_of_date"] == "2026-09-07"
+    assert item["price_last_date"] == "2026-09-07"
+    assert item["snapshot_last_date"] is None
+    assert "STALE_SNAPSHOT" in item["states"]
+
+
+def test_quality_report_keeps_noncritical_source_degradation_separate(tmp_path):
+    report = _report(
+        _write_frames(tmp_path, pit_verified=False),
+        failures=["513100 NAV eastmoney: ReadTimeout"],
     )
 
     item = report["by_symbol"]["513100"]
@@ -100,19 +135,13 @@ def test_quality_report_keeps_noncritical_source_degradation_separate(tmp_path):
 
 
 def test_quality_report_marks_degraded_source_critical_when_current_input_is_stale(tmp_path):
-    prices_path, nav_path, snapshot_path = _write_frames(
-        tmp_path,
-        pit_verified=True,
-        snapshot_date="2026-09-07",
-    )
-
-    report = build_quality_report(
-        prices_path,
-        nav_path,
-        snapshot_path,
-        ["513100"],
-        "2026-09-08",
-        ["snapshot akshare:eastmoney: ReadTimeout"],
+    report = _report(
+        _write_frames(
+            tmp_path,
+            pit_verified=True,
+            snapshot_date="2026-09-07",
+        ),
+        failures=["snapshot akshare:eastmoney: ReadTimeout"],
     )
 
     item = report["by_symbol"]["513100"]
@@ -124,19 +153,12 @@ def test_quality_report_marks_degraded_source_critical_when_current_input_is_sta
 
 
 def test_nav_status_fallback_promotes_only_explicit_restrictions(tmp_path):
-    prices_path, nav_path, snapshot_path = _write_frames(
-        tmp_path,
-        subscription_status="暂停申购",
-        redemption_status="场内卖出",
-    )
-
-    report = build_quality_report(
-        prices_path,
-        nav_path,
-        snapshot_path,
-        ["513100"],
-        "2026-09-08",
-        [],
+    report = _report(
+        _write_frames(
+            tmp_path,
+            subscription_status="暂停申购",
+            redemption_status="场内卖出",
+        )
     )
 
     item = report["by_symbol"]["513100"]
@@ -148,19 +170,12 @@ def test_nav_status_fallback_promotes_only_explicit_restrictions(tmp_path):
 
 
 def test_secondary_market_labels_are_not_misclassified_as_primary_market_open(tmp_path):
-    prices_path, nav_path, snapshot_path = _write_frames(
-        tmp_path,
-        subscription_status="场内买入",
-        redemption_status="场内卖出",
-    )
-
-    report = build_quality_report(
-        prices_path,
-        nav_path,
-        snapshot_path,
-        ["513100"],
-        "2026-09-08",
-        [],
+    report = _report(
+        _write_frames(
+            tmp_path,
+            subscription_status="场内买入",
+            redemption_status="场内卖出",
+        )
     )
 
     item = report["by_symbol"]["513100"]
