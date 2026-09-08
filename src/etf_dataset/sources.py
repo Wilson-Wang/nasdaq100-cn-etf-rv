@@ -297,14 +297,59 @@ def fetch_prices_akshare_em(etf: ETF, start_date: str, end_date: str) -> pd.Data
     return df.reindex(columns=PRICE_COLUMNS)
 
 
+def fetch_prices_akshare_sina(etf: ETF, start_date: str, end_date: str) -> pd.DataFrame:
+    """Fetch full-history ETF daily bars from Sina through AKShare.
+
+    Sina is intentionally a lower-priority supplement. It is useful when
+    Baostock begins too recently and the Eastmoney endpoint is unavailable.
+    """
+    import akshare as ak
+
+    df = ak.fund_etf_hist_sina(symbol=f"{etf.exchange}{etf.symbol}")
+    if df is None or df.empty:
+        return _empty(PRICE_COLUMNS)
+
+    df = df.rename(
+        columns={
+            "date": "date",
+            "open": "open",
+            "high": "high",
+            "low": "low",
+            "close": "close",
+            "volume": "volume",
+        }
+    )
+    df["symbol"] = etf.symbol
+    parsed_date = pd.to_datetime(df["date"], errors="coerce")
+    start = pd.Timestamp(start_date)
+    end = pd.Timestamp(end_date)
+    df = df.loc[parsed_date.between(start, end)].copy()
+    if df.empty:
+        return _empty(PRICE_COLUMNS)
+
+    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.strftime("%Y-%m-%d")
+    df["preclose"] = pd.NA
+    df["amount"] = pd.NA
+    df["turnover"] = pd.NA
+    df["pct_change"] = pd.NA
+    df["trade_status"] = pd.NA
+    df = _to_numeric(df, ["open", "high", "low", "close", "volume"])
+    df = _add_tradability(df)
+    df["source"] = "akshare:sina:fund_etf_hist_sina"
+    df["source_priority"] = 30
+    df["ingested_at_utc"] = _now_utc()
+    return df.reindex(columns=PRICE_COLUMNS)
+
+
 def fetch_prices_with_fallback(
     etf: ETF, start_date: str, end_date: str
 ) -> tuple[pd.DataFrame, list[str]]:
-    """Fetch prices and supplement partial primary-source coverage.
+    """Fetch prices and supplement partial coverage source by source.
 
     A non-empty primary result is not sufficient if it covers only part of the
-    requested history. Secondary data is fetched only when coverage is
-    materially incomplete, then overlapping dates retain the preferred source.
+    requested history. Baostock is preferred, Eastmoney is the first
+    supplement, and Sina is a second independent supplement. Coverage is
+    recomputed after each source so unnecessary requests are avoided.
     """
     errors: list[str] = []
     frames: list[pd.DataFrame] = []
@@ -321,7 +366,8 @@ def fetch_prices_with_fallback(
         primary = _empty(PRICE_COLUMNS)
         errors.append(f"{etf.symbol} prices baostock: {type(exc).__name__}: {exc}")
 
-    coverage = _price_coverage(primary, start_date, end_date)
+    merged = _merge_price_frames(frames)
+    coverage = _price_coverage(merged, start_date, end_date)
     if bool(coverage["needs_supplement"]):
         try:
             fallback = run_with_timeout(
@@ -334,6 +380,22 @@ def fetch_prices_with_fallback(
         except Exception as exc:
             errors.append(
                 f"{etf.symbol} prices akshare:eastmoney: {type(exc).__name__}: {exc}"
+            )
+
+    merged = _merge_price_frames(frames)
+    coverage = _price_coverage(merged, start_date, end_date)
+    if bool(coverage["needs_supplement"]):
+        try:
+            fallback = run_with_timeout(
+                fetch_prices_akshare_sina, etf, start_date, end_date, seconds=30
+            )
+            if fallback.empty:
+                errors.append(f"{etf.symbol} prices akshare:sina: empty result")
+            else:
+                frames.append(fallback)
+        except Exception as exc:
+            errors.append(
+                f"{etf.symbol} prices akshare:sina: {type(exc).__name__}: {exc}"
             )
 
     return _merge_price_frames(frames), errors
