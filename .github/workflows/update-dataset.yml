@@ -45,8 +45,12 @@ jobs:
         run: python scripts/analyze_pairs.py
       - name: Analyze common-factor challenger
         run: python scripts/analyze_factor_residuals.py
+      - name: Analyze price-ratio diagnostic
+        run: python scripts/analyze_price_ratio_diagnostics.py
       - name: Build portfolio research plan
         run: python scripts/build_portfolio_plan.py
+      - name: Persist risk policy
+        run: python scripts/build_risk_policy.py
       - name: Update frozen OOS ledger
         run: python scripts/update_oos.py
       - name: Calibrate execution-cost challenger
