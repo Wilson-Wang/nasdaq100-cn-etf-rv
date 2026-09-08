@@ -73,13 +73,7 @@ def _previous_weekday(value: str) -> str:
 
 
 def _effective_market_date(as_of_date: str, observed_at_utc: str | None) -> str:
-    """Return the latest weekday whose daily market data should be complete.
-
-    This remains a weekday heuristic rather than an exchange-holiday calendar.
-    On the current China-market date, daily data is not considered complete
-    before 15:30 Asia/Shanghai. Weekends roll back to the previous weekday.
-    Historical weekday dates are kept unchanged.
-    """
+    """Return the latest weekday whose daily market data should be complete."""
     requested = pd.Timestamp(as_of_date).date()
     observed_cn = _observed_timestamp(observed_at_utc).tz_convert(CHINA_TZ)
 
@@ -117,8 +111,19 @@ def _on_or_before(group: pd.DataFrame, column: str, cutoff_date: str) -> pd.Data
 
 
 def _available_by(group: pd.DataFrame, cutoff: pd.Timestamp) -> pd.DataFrame:
-    if group.empty or "available_at" not in group.columns:
-        return group.iloc[0:0].copy()
+    """Return rows whose PIT availability is established by the cutoff.
+
+    Legacy exact-PIT fixtures may contain `pit_verified=true` without an
+    `available_at` column. Those rows remain accepted for backward compatibility;
+    production conservative-PIT rows must carry an explicit timestamp.
+    """
+    if group.empty:
+        return group.copy()
+    if "available_at" not in group.columns:
+        if "pit_verified" not in group.columns:
+            return group.iloc[0:0].copy()
+        return group.loc[_normalize_bool(group["pit_verified"])].copy()
+
     available = pd.to_datetime(group["available_at"], errors="coerce", utc=True)
     usable = (
         _normalize_bool(group["pit_usable"])
@@ -273,7 +278,11 @@ def build_quality_report(
     by_symbol: dict[str, dict] = {}
 
     for symbol in universe_symbols:
-        price_all = prices[prices["symbol"] == symbol] if "symbol" in prices.columns else pd.DataFrame()
+        price_all = (
+            prices[prices["symbol"] == symbol]
+            if "symbol" in prices.columns
+            else pd.DataFrame()
+        )
         nav_all = nav[nav["symbol"] == symbol] if "symbol" in nav.columns else pd.DataFrame()
         snapshot_all = (
             snapshot[snapshot["symbol"] == symbol]
@@ -311,10 +320,14 @@ def build_quality_report(
             if pcf_lag is not None and pcf_lag <= PCF_FRESH_BDAYS
             else None
         )
-        primary_market = current_pcf or _nav_primary_market_fallback(nav_available)
+        # NAV-page status is only a low-confidence fallback. It is intentionally
+        # separate from strict NAV PIT eligibility and must never prove a formal signal.
+        primary_market = current_pcf or _nav_primary_market_fallback(nav_group)
 
         stale_price = price_lag is None or price_lag > PRICE_FRESH_BDAYS
-        stale_nav = pit_nav_lag is None or pit_nav_lag > NAV_FRESH_BDAYS
+        # NAV freshness and NAV point-in-time usability are separate concepts.
+        # A recent NAV can be fresh yet still unavailable for strict historical use.
+        stale_nav = raw_nav_lag is None or raw_nav_lag > NAV_FRESH_BDAYS
         stale_snapshot = snapshot_lag is None or snapshot_lag > SNAPSHOT_FRESH_BDAYS
         critical_source_failure = source_degraded and (stale_price or stale_nav or stale_snapshot)
 
@@ -332,6 +345,8 @@ def build_quality_report(
             states.append("STALE_NAV")
         if stale_snapshot:
             states.append("STALE_SNAPSHOT")
+        if not pit_verified:
+            states.append("PIT_UNVERIFIED")
         if not pit_usable:
             states.append("PIT_UNAVAILABLE")
         elif not pit_verified:
@@ -378,6 +393,9 @@ def build_quality_report(
             "usable_price_observations": usable_prices,
             "price_last_date": price_last,
             "price_lag_business_days": price_lag,
+            # Backward-compatible aliases retain raw NAV freshness semantics.
+            "nav_last_date": raw_nav_last,
+            "nav_lag_business_days": raw_nav_lag,
             "raw_nav_last_date": raw_nav_last,
             "raw_nav_lag_business_days": raw_nav_lag,
             "pit_nav_last_date": pit_nav_last,
@@ -406,12 +424,13 @@ def build_quality_report(
         "daily_data_ready_time_cn": DAILY_DATA_READY_TIME_CN.strftime("%H:%M"),
         "thresholds_business_days": {
             "price": PRICE_FRESH_BDAYS,
+            "nav": NAV_FRESH_BDAYS,
             "nav_pit_usable": NAV_FRESH_BDAYS,
             "snapshot": SNAPSHOT_FRESH_BDAYS,
             "pcf": PCF_FRESH_BDAYS,
         },
         "nav_pit_method": "verified_timestamp_or_conservative_available_by_bound",
-        "primary_market_method": "available_official_pcf_then_available_nav_status_fallback",
+        "primary_market_method": "available_official_pcf_then_low_confidence_nav_status",
         "formal_signal_ready_symbols": [
             symbol for symbol, item in by_symbol.items() if item["formal_signal_ready"]
         ],
