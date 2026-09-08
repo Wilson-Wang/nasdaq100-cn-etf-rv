@@ -15,6 +15,13 @@ def main() -> None:
     manifest = json.loads((data / "manifest.json").read_text())
     execution_path = data / "execution_readiness.json"
     execution = json.loads(execution_path.read_text()) if execution_path.exists() else {}
+    # Pair Engine v1 is an EOD model with earliest execution at t+1. Reuse the
+    # engine's execution-ready field with the stricter semantic supplied by the
+    # EOD report: same-day activity is required now and a live book must be
+    # re-checked at actual next-session entry.
+    if execution.get("next_session_eligible_symbols") is not None:
+        execution = dict(execution)
+        execution["execution_ready_symbols"] = execution["next_session_eligible_symbols"]
     symbols = [str(value) for value in manifest.get("universe", [])]
 
     summary, event_tables = analyze_universe(
