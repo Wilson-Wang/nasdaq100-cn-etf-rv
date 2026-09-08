@@ -37,7 +37,7 @@ def test_upsert_prefers_higher_priority_source(tmp_path):
     assert float(result.iloc[0]["close"]) == 1.0
 
 
-def test_upsert_keeps_latest_same_priority(tmp_path):
+def test_upsert_keeps_latest_same_priority_when_business_value_changes(tmp_path):
     path = tmp_path / "snapshot.csv"
     first = pd.DataFrame(
         [
@@ -57,6 +57,31 @@ def test_upsert_keeps_latest_same_priority(tmp_path):
     upsert_csv(path, first, ["symbol", "data_date"])
     result = upsert_csv(path, second, ["symbol", "data_date"])
     assert float(result.iloc[0]["last"]) == 1.1
+    assert result.iloc[0]["ingested_at_utc"] == "2026-08-20T09:00:00+00:00"
+
+
+def test_upsert_preserves_existing_row_when_only_ingestion_time_changes(tmp_path):
+    path = tmp_path / "nav.csv"
+    first = pd.DataFrame(
+        [
+            {
+                "symbol": "159941",
+                "nav_date": "2026-08-20",
+                "unit_nav": 1.2345,
+                "source": "eastmoney",
+                "source_priority": 10,
+                "ingested_at_utc": "2026-08-20T08:00:00+00:00",
+            }
+        ]
+    )
+    repeated = first.copy()
+    repeated.loc[0, "ingested_at_utc"] = "2026-08-21T08:00:00+00:00"
+
+    upsert_csv(path, first, ["symbol", "nav_date"])
+    result = upsert_csv(path, repeated, ["symbol", "nav_date"])
+
+    assert len(result) == 1
+    assert result.iloc[0]["ingested_at_utc"] == "2026-08-20T08:00:00+00:00"
 
 
 def test_table_summary_exposes_per_symbol_usable_coverage(tmp_path):
