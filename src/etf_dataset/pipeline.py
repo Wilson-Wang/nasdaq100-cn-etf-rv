@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from typing import Callable
 
 import pandas as pd
 
@@ -15,11 +17,14 @@ from .audit import (
 )
 from .config import load_universe
 from .factors import (
+    FX_FACTOR_PREFERENCE,
     factor_summary,
     fetch_ndx_sina,
     fetch_usdcnh_em,
+    fetch_usdcny_safe,
     validate_factor_inputs,
 )
+from .nav_pit import enrich_nav_file, enrich_nav_pit, observed_exchange_days
 from .pcf import fetch_official_pcf, pcf_summary, validate_pcf
 from .quality import build_quality_report
 from .refresh import DEFAULT_OVERLAP_DAYS, plan_incremental_start, read_existing
@@ -38,19 +43,29 @@ def _default_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def _add_unverified_nav_pit_fields(nav: pd.DataFrame) -> pd.DataFrame:
-    """Persist explicit PIT-unknown state until a source proves availability time."""
-    nav = nav.copy()
-    defaults = {
-        "published_at": pd.NA,
-        "available_at": pd.NA,
-        "availability_source": "unverified",
-        "pit_verified": False,
-    }
-    for column, value in defaults.items():
-        if column not in nav.columns:
-            nav[column] = value
-    return nav
+def _call_with_retries(
+    func: Callable[..., pd.DataFrame],
+    *args,
+    attempts: int = 3,
+    timeout_seconds: int = 30,
+) -> pd.DataFrame:
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return run_with_timeout(func, *args, seconds=timeout_seconds)
+        except Exception as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(0.5 * (2**attempt))
+    assert last_error is not None
+    raise last_error
+
+
+def _preferred_existing_fx(existing_factors: pd.DataFrame) -> str:
+    if existing_factors.empty or "factor_name" not in existing_factors.columns:
+        return FX_FACTOR_PREFERENCE[0]
+    present = set(existing_factors["factor_name"].dropna().astype(str))
+    return next((name for name in FX_FACTOR_PREFERENCE if name in present), FX_FACTOR_PREFERENCE[0])
 
 
 def update_dataset(
@@ -102,10 +117,7 @@ def update_dataset(
             require_requested_start_coverage=False,
             tradable_column="is_tradable",
         )
-        refresh_plan["prices"][etf.symbol] = {
-            "start": price_start,
-            "mode": price_mode,
-        }
+        refresh_plan["prices"][etf.symbol] = {"start": price_start, "mode": price_mode}
         print(
             f"[{index}/{len(universe)}] {etf.symbol} prices {price_mode} from {price_start}",
             flush=True,
@@ -149,17 +161,10 @@ def update_dataset(
         nav_errors: list[str] = []
         nav = pd.DataFrame()
         try:
-            nav = run_with_timeout(
-                fetch_nav_akshare_em,
-                etf,
-                nav_start,
-                end_date,
-                seconds=30,
-            )
+            nav = run_with_timeout(fetch_nav_akshare_em, etf, nav_start, end_date, seconds=30)
             if nav.empty:
                 nav_errors.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
             else:
-                nav = _add_unverified_nav_pit_fields(nav)
                 nav_frames.append(nav)
         except Exception as exc:
             nav_errors.append(
@@ -187,7 +192,7 @@ def update_dataset(
         pcf_errors: list[str] = []
         pcf = pd.DataFrame()
         try:
-            pcf = run_with_timeout(fetch_official_pcf, etf, end_date, seconds=30)
+            pcf = _call_with_retries(fetch_official_pcf, etf, end_date, attempts=3)
             if pcf.empty:
                 pcf_errors.append(f"{etf.symbol} PCF official: empty result")
             else:
@@ -214,6 +219,11 @@ def update_dataset(
     prices_in = pd.concat(price_frames, ignore_index=True) if price_frames else pd.DataFrame()
     nav_in = pd.concat(nav_frames, ignore_index=True) if nav_frames else pd.DataFrame()
     pcf_in = pd.concat(pcf_frames, ignore_index=True) if pcf_frames else pd.DataFrame()
+
+    # Use actual observed ETF sessions as the mainland workday calendar for the
+    # QDII T+2 conservative NAV availability bound.
+    exchange_days = observed_exchange_days(prices_path, prices_in)
+    nav_in = enrich_nav_pit(nav_in, exchange_days)
 
     symbols = {etf.symbol for etf in universe}
     print("fetching latest ETF snapshot", flush=True)
@@ -246,57 +256,113 @@ def update_dataset(
 
     factor_frames: list[pd.DataFrame] = []
     print("fetching fair-value factor inputs", flush=True)
-    for factor_name, source_name, fetcher in (
-        ("NDX", "akshare:sina:index_us_stock_sina", fetch_ndx_sina),
-        ("USDCNH", "akshare:eastmoney:forex_hist_em", fetch_usdcnh_em),
-    ):
-        factor_start, factor_mode = plan_incremental_start(
-            existing_factors,
+
+    ndx_start, ndx_mode = plan_incremental_start(
+        existing_factors,
+        date_column="factor_date",
+        requested_start=start_date,
+        filter_column="factor_name",
+        filter_value="NDX",
+        minimum_observations=120,
+        require_requested_start_coverage=True,
+    )
+    refresh_plan["factors"]["NDX"] = {"start": ndx_start, "mode": ndx_mode}
+    started = utc_now()
+    ndx_errors: list[str] = []
+    ndx = pd.DataFrame()
+    try:
+        ndx = run_with_timeout(fetch_ndx_sina, ndx_start, end_date, seconds=30)
+        if ndx.empty:
+            ndx_errors.append("factor NDX akshare:sina:index_us_stock_sina: empty result")
+        else:
+            factor_frames.append(ndx)
+    except Exception as exc:
+        ndx_errors.append(
+            f"factor NDX akshare:sina:index_us_stock_sina: {type(exc).__name__}: {exc}"
+        )
+    finished = utc_now()
+    failures.extend(ndx_errors)
+    source_records.append(
+        build_source_run_record(
+            run_id=run_id,
+            resource="factor:NDX",
+            symbol="*",
+            requested_start=ndx_start,
+            requested_end=end_date,
+            started_at=started,
+            finished_at=finished,
+            frame=ndx,
             date_column="factor_date",
-            requested_start=start_date,
-            filter_column="factor_name",
-            filter_value=factor_name,
-            minimum_observations=120,
-            require_requested_start_coverage=True,
+            errors=ndx_errors,
         )
-        refresh_plan["factors"][factor_name] = {
-            "start": factor_start,
-            "mode": factor_mode,
-        }
-        started = utc_now()
-        factor_errors: list[str] = []
-        factor = pd.DataFrame()
+    )
+
+    existing_fx_name = _preferred_existing_fx(existing_factors)
+    fx_start, fx_mode = plan_incremental_start(
+        existing_factors,
+        date_column="factor_date",
+        requested_start=start_date,
+        filter_column="factor_name",
+        filter_value=existing_fx_name,
+        minimum_observations=120,
+        require_requested_start_coverage=True,
+    )
+    refresh_plan["factors"]["FX"] = {
+        "start": fx_start,
+        "mode": fx_mode,
+        "existing_preference": existing_fx_name,
+        "source_preference": list(FX_FACTOR_PREFERENCE),
+    }
+    started = utc_now()
+    fx_errors: list[str] = []
+    fx = pd.DataFrame()
+    try:
+        fx = run_with_timeout(fetch_usdcnh_em, fx_start, end_date, seconds=30)
+        if fx.empty:
+            fx_errors.append("factor USDCNH akshare:eastmoney:forex_hist_em: empty result")
+    except Exception as exc:
+        fx_errors.append(
+            f"factor USDCNH akshare:eastmoney:forex_hist_em: {type(exc).__name__}: {exc}"
+        )
+        fx = pd.DataFrame()
+
+    if fx.empty:
         try:
-            factor = run_with_timeout(fetcher, factor_start, end_date, seconds=30)
-            if factor.empty:
-                factor_errors.append(f"factor {factor_name} {source_name}: empty result")
-            else:
-                factor_frames.append(factor)
+            fx = run_with_timeout(fetch_usdcny_safe, fx_start, end_date, seconds=30)
+            if fx.empty:
+                fx_errors.append("factor USDCNY akshare:safe:currency_boc_safe: empty result")
         except Exception as exc:
-            factor_errors.append(
-                f"factor {factor_name} {source_name}: {type(exc).__name__}: {exc}"
+            fx_errors.append(
+                f"factor USDCNY akshare:safe:currency_boc_safe: {type(exc).__name__}: {exc}"
             )
-        finished = utc_now()
-        failures.extend(factor_errors)
-        source_records.append(
-            build_source_run_record(
-                run_id=run_id,
-                resource=f"factor:{factor_name}",
-                symbol="*",
-                requested_start=factor_start,
-                requested_end=end_date,
-                started_at=started,
-                finished_at=finished,
-                frame=factor,
-                date_column="factor_date",
-                errors=factor_errors,
-            )
+            fx = pd.DataFrame()
+    if not fx.empty:
+        factor_frames.append(fx)
+    finished = utc_now()
+    failures.extend(fx_errors)
+    source_records.append(
+        build_source_run_record(
+            run_id=run_id,
+            resource="factor:FX",
+            symbol="*",
+            requested_start=fx_start,
+            requested_end=end_date,
+            started_at=started,
+            finished_at=finished,
+            frame=fx,
+            date_column="factor_date",
+            errors=fx_errors,
         )
+    )
+
     factors_in = pd.concat(factor_frames, ignore_index=True) if factor_frames else pd.DataFrame()
     source_runs_in = records_frame(source_records)
 
     upsert_csv(prices_path, prices_in, ["symbol", "date"])
     upsert_csv(nav_path, nav_in, ["symbol", "nav_date"])
+    # One-time enrichment of previously stored history; subsequent unchanged
+    # refreshes retain business values and ingestion provenance.
+    enrich_nav_file(nav_path, exchange_days)
     if not pcf_in.empty or pcf_path.exists():
         upsert_csv(pcf_path, pcf_in, ["symbol", "date"])
     if not snapshot_in.empty or snapshot_path.exists():
