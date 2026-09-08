@@ -1,41 +1,102 @@
-# Nasdaq-100 China ETF Dataset
+# Nasdaq-100 China ETF Relative-Value Research
 
-A reproducible, database-free dataset pipeline for China-listed ETFs tracking the Nasdaq-100 index.
+A reproducible, database-free data and research pipeline for China-listed ETFs tracking the Nasdaq-100 index.
 
-The repository is designed to support relative-value research across same-index ETFs: premium/discount history, pair spreads, robust z-scores, half-life estimates, and rotation research. It stores normalized source data in versioned files instead of requiring MySQL/PostgreSQL or a hosted database.
+The repository supports same-index relative-value research without predicting Nasdaq-100 direction and without describing the strategy as risk-free arbitrage. It stores normalized source data and research outputs in versioned CSV/Parquet/JSON files rather than requiring a database server.
 
 ## Design goals
 
-- **Database-free by default**: canonical CSV files plus Parquet mirrors; query locally with DuckDB.
-- **Multi-source**: use Baostock for historical exchange prices first, with AKShare/Eastmoney as fallback; use AKShare fund interfaces for NAV and snapshots.
-- **Provenance-first**: every row contains `source`, `source_priority`, and `ingested_at_utc`.
-- **Failure-tolerant**: a failed endpoint does not fabricate values or erase existing history; failures are written to `data/manifest.json`.
-- **Incremental**: repeated runs upsert by business key and keep stable historical rows.
-- **Automation-ready**: GitHub Actions can refresh the dataset after China market close on weekdays.
+- **Database-free**: canonical CSV plus Parquet mirrors; DuckDB can query locally.
+- **Multi-source and coverage-aware**: preferred sources are supplemented when a returned range is incomplete.
+- **Point-in-time aware**: NAV, PCF and model inputs carry availability semantics; conservative timing is never mislabeled as exact verification.
+- **Gate-first**: data quality, Regime, execution and multiple-testing gates precede ranking.
+- **Reproducible**: model versions/hashes, source calls, OOS states and report state are persisted.
+- **Failure-tolerant**: endpoint failures remain visible and never create fabricated values.
+- **Prospective evidence**: execution-cost and OOS evidence are accumulated forward rather than backfilled from unavailable information.
 
 ## ETF universe
 
-The initial universe is in `config/etfs.json` and currently contains 12 China-listed Nasdaq-100 ETFs:
+`config/etfs.json` currently contains 12 China-listed Nasdaq-100 ETFs:
 
 `159941`, `159501`, `159513`, `159632`, `159659`, `159660`, `159696`, `513100`, `513110`, `513300`, `513390`, `513870`.
 
-The configuration is explicit so universe changes are reviewable in Git history.
+Different-index products such as `159509` do not enter the same-index Pair model.
 
-## Data outputs
+## Main outputs
 
-After the first successful update, the pipeline creates:
+### Base data
 
-| File | Grain | Purpose |
-|---|---|---|
-| `data/etf_prices.csv` | symbol + date | Daily OHLCV/amount history |
-| `data/etf_prices.parquet` | symbol + date | Columnar mirror for analytics |
-| `data/etf_nav.csv` | symbol + nav_date | Historical unit/accumulated NAV and subscription status |
-| `data/etf_nav.parquet` | symbol + nav_date | Columnar mirror |
-| `data/etf_snapshot.csv` | symbol + data_date | Latest market snapshot, IOPV/premium fields when available |
-| `data/etf_snapshot.parquet` | symbol + data_date | Columnar mirror |
-| `data/manifest.json` | one file | Row counts, date ranges, source mix, failures and checksums |
+- `data/etf_prices.csv/.parquet`
+- `data/etf_nav.csv/.parquet`
+- `data/etf_pcf.csv/.parquet`
+- `data/etf_snapshot.csv/.parquet`
+- `data/factor_inputs.csv/.parquet`
+- `data/source_runs.csv/.parquet`
+- `data/manifest.json`
 
-See `docs/SOURCES.md` and `data/README.md` for field definitions.
+### Research
+
+- `data/pair_analysis.csv/.parquet`
+- `data/pair_events.csv`
+- `data/liquidity_scores.csv`
+- `data/etf_metadata.csv`
+- `data/product_quality.csv`
+- `data/product_value_ranking.csv`
+- `data/etf_events.csv`
+- `data/execution_readiness.json`
+- `data/history_depth.json`
+- `data/regime_history_coverage.json`
+- `data/research_health.json`
+- `data/portfolio_plan.csv`
+- `data/portfolio_status.json`
+- `data/model_registry.json`
+- `data/oos_pair_states.csv`
+- `data/execution_cost_model.json`
+- `data/factor_residual_ranking.csv`
+- `data/factor_residual_candidates.csv`
+- `data/factor_residual_status.json`
+- `data/daily_report.md`
+- `data/report_state.json`
+
+Prospective intraday observations are accumulated in `data/execution_history.csv/.parquet` when live books are available.
+
+## Pair Engine v1.0.0
+
+The frozen baseline implements:
+
+- common PIT-safe NAV alignment;
+- 60-observation Robust Z using history through `t-1`;
+- 120-observation AR(1), Half-Life and stationarity diagnostics through `t-1`;
+- crossing/reset event sampling;
+- walk-forward realized relative-return backtesting;
+- t+1 open entry and fifth future aligned-session close;
+- assumed rotation cost;
+- direction-aware primary-market/Regime gate;
+- liquidity-aware PairScore;
+- Benjamini-Hochberg ADF FDR as an additional formal gate.
+
+`TRADE` / `STRONG TRADE` can be emitted only after hard gates pass. PairScore ranks eligible candidates; it cannot rescue a failed gate.
+
+## Product and portfolio layers
+
+Product Quality Score (PQS) is separated from Tactical Value Score (TVS). A reported AUM is preferred; when the metadata source omits it, the scoring layer can use `shares × latest NAV` as an explicitly labelled proxy without altering raw metadata.
+
+The portfolio research layer consumes only formal Pair signals, selects at most three non-overlapping pairs, caps any selected pair at 40%, and leaves unused risk budget unallocated when too few independent opportunities exist. It is not an order-generation system.
+
+## OOS and challenger models
+
+`pair-engine-v1.0.0` has a frozen model hash. Its OOS period begins 2026-09-09 and the complete daily Pair cross-section is saved so unsuccessful opportunities cannot be silently discarded.
+
+The common-factor residual model and empirical execution-cost calibration are challengers. They may annotate or challenge the baseline but do not silently change or upgrade the frozen production research signal.
+
+## Historical evidence limits
+
+The pipeline makes evidence gaps explicit:
+
+- historical NAV can be `pit_usable=true` by a conservative disclosure bound while remaining `pit_verified=false` when exact publication timestamps are unavailable;
+- historical PCF is never synthesized; `regime_history_coverage.json` reports actual PIT-verified coverage;
+- historical bid/ask observations that were not collected cannot be reconstructed from daily OHLC;
+- future OOS results cannot be backfilled.
 
 ## Quick start
 
@@ -46,37 +107,43 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -e '.[dev]'
 python scripts/update_dataset.py --lookback-days 450
+python scripts/reconcile_exchange_calendar.py
+python scripts/check_history_depth.py
+python scripts/check_regime_history_coverage.py
+python scripts/update_execution_readiness.py
+python scripts/update_metadata.py
+python scripts/update_events.py
+python scripts/analyze_pairs.py
+python scripts/analyze_factor_residuals.py
+python scripts/build_portfolio_plan.py
+python scripts/update_oos.py
+python scripts/calibrate_execution_cost.py
+python scripts/check_research_health.py
+python scripts/generate_daily_report.py
 python scripts/validate_dataset.py
+python scripts/validate_research_outputs.py
 ```
 
-Query with DuckDB without running a database server:
+For a one-time deeper history request, use the manual `Backfill ETF research history` workflow or:
 
 ```bash
-python scripts/query_dataset.py \
-  "select symbol, max(date) as last_date, count(*) as rows from prices group by 1 order by 1"
+python scripts/backfill_research_history.py --lookback-days 1100
 ```
 
-## Update behavior
+The workflow version automatically rebuilds the manifest and all research outputs after the backfill.
 
-Historical prices are fetched with this order:
+## Automation
 
-1. **Baostock** — non-Eastmoney source, daily unadjusted bars.
-2. **AKShare / Eastmoney** — fallback when Baostock fails or returns no rows.
+- `.github/workflows/update-dataset.yml`: full weekday EOD research refresh at 18:30 Asia/Shanghai and manual runs.
+- `.github/workflows/capture-execution.yml`: weekday intraday live-book observation at 14:50 Asia/Shanghai plus manual runs.
+- `.github/workflows/backfill-research-history.yml`: manual deep-history refresh and full downstream rebuild.
 
-Historical NAV currently uses AKShare's Eastmoney fund interface because NAV coverage is fund-specific and cannot safely be inferred from market prices. The dataset records the source explicitly rather than filling missing NAV from an unrelated field.
-
-The source hierarchy is intentionally pluggable; additional adapters can be added without changing the storage schema.
-
-## GitHub Actions
-
-`.github/workflows/update-dataset.yml` runs on weekdays after China market close and can also be started manually. It commits dataset changes back to `main` only when files changed.
-
-Scheduled workflows run from the default branch, and GitHub Actions supports scheduled workflow triggers. See GitHub documentation for operational details.
+All dataset commits use fetch/rebase before push to reduce races with concurrent repository changes.
 
 ## Research boundary
 
-This repository is a data layer. It does not place trades and does not label a pair as a formal trade signal merely because a single-day spread looks attractive. Downstream analysis should require adequate 60/120-day history and preserve point-in-time NAV alignment.
+The repository produces research signals and diagnostics only. It does not place trades, does not promise convergence, and does not characterize relative-value opportunities as risk-free arbitrage.
 
 ## License
 
-MIT. Data retrieved from third-party public endpoints remains subject to the terms and rights of the underlying providers.
+MIT. Data retrieved from public third-party and exchange endpoints remains subject to the terms and rights of the underlying providers.

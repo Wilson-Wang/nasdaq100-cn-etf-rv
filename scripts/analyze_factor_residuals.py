@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -57,11 +58,42 @@ def main() -> int:
     ranking = latest_factor_ranking(factors)
     candidates = latest_factor_candidates(factors, n_each=args.top)
 
+    ranking.to_csv(data_dir / "factor_residual_ranking.csv", index=False)
+    if not ranking.empty:
+        ranking.to_parquet(data_dir / "factor_residual_ranking.parquet", index=False)
+    candidates.to_csv(data_dir / "factor_residual_candidates.csv", index=False)
+    if not candidates.empty:
+        candidates.to_parquet(data_dir / "factor_residual_candidates.parquet", index=False)
+
     if ranking.empty:
+        status = {
+            "status": "INSUFFICIENT_DATA",
+            "model": "common-factor-residual-challenger-v1",
+            "production_gate": False,
+            "latest_date": None,
+            "ranked_symbols": 0,
+            "candidate_rows": 0,
+        }
+        (data_dir / "factor_residual_status.json").write_text(
+            json.dumps(status, ensure_ascii=False, indent=2) + "\n"
+        )
         print("No factor ranking available; check aligned price/NAV history.")
         return 0
 
     latest_date = pd.Timestamp(ranking.iloc[0]["date"]).date().isoformat()
+    status = {
+        "status": "EXPERIMENTAL",
+        "model": "common-factor-residual-challenger-v1",
+        "production_gate": False,
+        "latest_date": latest_date,
+        "ranked_symbols": int(len(ranking)),
+        "candidate_rows": int(len(candidates)),
+        "semantics": "challenger_only_never_upgrades_formal_pair_signal",
+    }
+    (data_dir / "factor_residual_status.json").write_text(
+        json.dumps(status, ensure_ascii=False, indent=2) + "\n"
+    )
+
     print(f"factor-model date={latest_date} status=EXPERIMENTAL PIT may be unverified")
     display_columns = [
         "symbol",

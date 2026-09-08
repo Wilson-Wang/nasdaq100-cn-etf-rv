@@ -1,12 +1,12 @@
-# Integration with Nasdaq-100 ETF Relative-Value Skill v2.1.x
+# Integration with Nasdaq-100 ETF Relative-Value Skill v2.2
 
-This repository is the canonical data layer for the downstream `nasdaq100-cn-etf-relative-value` skill.
+This repository is the canonical data and research layer for the downstream `nasdaq100-cn-etf-relative-value` Skill.
 
-The integration contract is **dataset-first**, **multi-source**, **point-in-time**, **coverage-aware**, and now explicitly separates **model readiness** from **execution readiness**.
+The contract is **dataset-first**, **multi-source**, **point-in-time**, **coverage-aware**, **gate-first**, and explicitly separates model research, execution eligibility, portfolio construction, challenger models, and prospective OOS evidence.
 
-## 1. Canonical data products
+## 1. Canonical outputs
 
-Current persisted outputs are:
+Base inputs:
 
 - `data/etf_prices.csv` / `.parquet`
 - `data/etf_nav.csv` / `.parquet`
@@ -14,210 +14,224 @@ Current persisted outputs are:
 - `data/etf_snapshot.csv` / `.parquet`
 - `data/factor_inputs.csv` / `.parquet`
 - `data/source_runs.csv` / `.parquet`
-- `data/execution_readiness.json`
 - `data/manifest.json`
 
-The Skill must read `manifest.json` before running models. Requested lookback length is never evidence of actual coverage; use per-symbol and aligned-pair observations.
+Research outputs:
 
-## 2. Two distinct readiness gates
+- `data/execution_readiness.json`
+- `data/liquidity_scores.csv`
+- `data/etf_metadata.csv`
+- `data/product_quality.csv`
+- `data/product_value_ranking.csv`
+- `data/etf_events.csv`
+- `data/pair_analysis.csv`
+- `data/pair_events.csv`
+- `data/model_registry.json`
+- `data/oos_pair_states.csv`
+- `data/portfolio_plan.csv`
+- `data/portfolio_status.json`
+- `data/history_depth.json`
+- `data/regime_history_coverage.json`
+- `data/research_health.json`
+- `data/execution_cost_model.json`
+- `data/factor_residual_ranking.csv`
+- `data/factor_residual_candidates.csv`
+- `data/factor_residual_status.json`
+- `data/daily_report.md`
+- `data/report_state.json`
 
-### 2.1 Model readiness
+Prospective execution observations are accumulated separately in `data/execution_history.csv` when the intraday capture workflow has live-book data.
 
-`manifest.json -> quality.formal_signal_ready_symbols` means that the historical/PIT inputs are sufficient to run the formal relative-value model.
+The Skill must read `manifest.json`, `history_depth.json`, `regime_history_coverage.json`, and readiness outputs before interpreting model results. Requested lookback length is never evidence of actual coverage.
 
-It does **not** mean that an ETF currently has an executable order book.
+## 2. Model readiness vs execution readiness
 
-Current model-readiness checks include:
+`manifest.json -> quality.formal_signal_ready_symbols` means the historical/PIT inputs are sufficient to run the formal relative-value model. It does **not** mean the ETF has an immediately executable order book.
 
-- at least 120 usable historical price observations;
-- current price/NAV/snapshot freshness;
-- NAV point-in-time usability by the information cutoff;
-- no critical source failure;
-- current primary-market state when official PCF is available.
+The EOD Pair Engine generates a signal after a completed mainland session and assumes entry no earlier than the next tradable session. Therefore two execution concepts are distinct:
 
-The current dataset has 250+ usable observations for all 12 ETFs, but pair eligibility still requires the pair's own aligned, tradable history.
+- intraday `execution_ready`: requires a live valid bid/ask and current trading activity;
+- EOD `next_session_eligible`: requires evidence the ETF traded in the signal session, with the live book re-checked at actual next-session execution.
 
-### 2.2 Execution readiness
+Never fill a missing current book from an older day merely to manufacture an executable signal.
 
-`manifest.json -> execution` and `data/execution_readiness.json` are the execution gate.
+## 3. Historical coverage contract
 
-A symbol is `execution_ready=true` only when the current-day snapshot has:
+Historical price sourcing is coverage-aware:
 
-- a positive last price;
-- positive observed volume or amount;
-- a valid best bid/ask with `bid1 > 0` and `ask1 >= bid1`.
+1. Baostock preferred;
+2. AKShare/Eastmoney supplement;
+3. AKShare/Sina independent supplement.
 
-Missing bid/ask values must **never** be filled from an older trading day merely to manufacture a trade signal.
+Overlaps retain the lower source priority. Pair model observations require both legs to be tradable.
 
-For a formal pair signal, **both ETF legs must be execution-ready**. If the model passes but either leg is execution-blocked, cap the result at `WATCH` until execution inputs recover.
+`history_depth.json` reports, per symbol:
 
-Typical execution states are:
+- unique tradable price observations;
+- PIT-usable NAV observations;
+- aligned upper bound;
+- 120-day minimum status;
+- 250-day research precheck;
+- preferred 500-day depth.
 
-- `NO_CURRENT_DAY_SNAPSHOT`
-- `NO_CURRENT_PRICE`
-- `NO_TRADING_ACTIVITY`
-- `NO_ACTIVE_BOOK`
-- `EXECUTION_READY`
+Actual Pair alignment can be lower than the symbol-level upper bound. `pair_analysis.aligned_observations` must never exceed either leg's unique tradable price-date count; research validation enforces this to catch accidental many-to-many joins.
 
-## 3. Historical price contract
+Deep-history backfill is a separate manual workflow. After backfill it rebuilds the manifest and every downstream research output so stored data and manifest coverage cannot silently diverge.
 
-Historical price sourcing is coverage-aware rather than first-non-empty:
+## 4. NAV point-in-time semantics
 
-1. Baostock — preferred source;
-2. AKShare/Eastmoney — supplementation;
-3. AKShare/Sina — independent supplementation when earlier sources under-cover or fail.
-
-Overlapping dates retain the lower `source_priority`; fallback sources fill holes rather than overwrite preferred rows.
-
-Each row includes `is_tradable`. Robust Z, AR/half-life estimation and executable P&L backtests may use a date only when **both pair legs are tradable**.
-
-A symbol reaching 250 usable observations switches to overlapping incremental refresh; incomplete history remains in full-backfill mode.
-
-## 4. NAV point-in-time contract
-
-Historical NAV has two separate concepts:
+Historical NAV keeps two concepts separate:
 
 - `pit_verified=true`: exact/source-backed availability timing has been proven;
-- `pit_usable=true`: the observation is safe for no-lookahead use by a conservative availability bound, even though the exact publication time is unverified.
+- `pit_usable=true`: no-lookahead use is safe by a conservative availability bound even though exact publication time is not verified.
 
-Current historical QDII NAV generally remains:
+Historical QDII NAV without source publication timestamps remains `pit_verified=false`. The conservative availability policy uses first-seen evidence and the applicable QDII T+2 mainland trading-day disclosure bound. It must be reported as `PIT_CONSERVATIVE`, never as exact historical PIT.
 
-- `pit_verified=false`
-- `availability_verified=false`
-- `pit_usable=true` once its conservative bound has passed.
+For pair `(i,j)` at cutoff `t`, use only NAV with `available_at <= t`, and use the latest common eligible NAV date for the NAV-premium spread.
 
-The conservative bound uses the earliest safe value between observed first ingestion and the QDII regulatory T+2 mainland-exchange-workday disclosure bound. Observed ETF trading sessions are used rather than generic weekdays where possible.
+## 5. PCF and historical Regime coverage
 
-This state must be reported as `PIT_CONSERVATIVE`, not silently promoted to exact PIT.
+Current PCF collection uses official SSE/SZSE sources and persists creation/redemption permissions, limits, creation unit, cash-substitution information, IOPV flag, availability metadata, and provenance.
 
-For pair `(i, j)` at information cutoff `t`, use only NAV values whose `available_at <= t`, and use the latest common eligible NAV date when the NAV-premium pair model requires synchronized anchors.
+Current official PCF may be used for current/future directional Regime gating when its `available_at` precedes the information cutoff.
 
-## 5. Information cutoff vs EOD model date
+Historical PCF is evidence-driven only. Missing old exchange files are **not** synthesized. `regime_history_coverage.json` explicitly reports each ETF as `FULL_OR_NEAR_FULL`, `PARTIAL`, `PROSPECTIVE_ONLY`, or `MISSING`.
 
-Do not treat all daily inputs as if they share the same cutoff.
+Historical event/PCF Regime filters may be applied only on dates where PIT-verified historical event data actually exists. Missing historical PCF must never be interpreted as `NORMAL`.
 
-- Daily market-price models use the latest completed mainland trading session (`model_as_of_date`).
-- PCF and other information published during the current morning may already be usable before the current trading day has completed.
-- NAV/PCF eligibility is determined by `available_at <= information_cutoff_utc`.
+Directional interpretation remains:
 
-This prevents both lookahead and the opposite error of discarding information that was genuinely known before trading.
+- creation restriction weakens high-premium compression;
+- redemption restriction weakens discount-repair.
 
-## 6. Three-anchor fair-value framework
+## 6. Three valuation anchors
 
-The Skill distinguishes:
+The research stack distinguishes:
 
-1. **Official NAV** — disclosure / historical anchor;
-2. **IOPV** — intraday ETF reference when valid for the same time slice;
-3. **Model Fair Value** — optional estimate using a known NAV base, Nasdaq-100 factor and aligned FX factor.
+1. Official NAV;
+2. IOPV when valid for the same time slice;
+3. Model Fair Value using aligned Nasdaq-100 and FX factors.
 
-Snapshot-derived fields include, when valid:
+Snapshot-derived fields retain missing/crossed quotes as missing.
 
-- `mid`
-- `bid_ask_spread_pct`
-- `last_iopv_premium_pct`
-- `mid_iopv_premium_pct`
+Factor preference is NDX plus USDCNH when available; official SAFE/BOC USDCNY is the fallback. A fallback is surfaced and must be used consistently within one calculation. Anchor disagreement caps confidence rather than being averaged away.
 
-Crossed or missing quotes remain missing.
+## 7. Pair Engine v1.0.0
 
-Factor inputs currently support:
+The frozen production research engine uses:
 
-- `NDX` from Sina via AKShare;
-- `USDCNH` from Eastmoney when available;
-- official SAFE/BOC `USDCNY` as fallback when `USDCNH` fails.
+- 60-observation Robust Z estimated through `t-1`;
+- MAD with IQR fallback;
+- 120-observation AR(1) / Half-Life through `t-1`;
+- ADF, KPSS diagnostics and rolling stability;
+- crossing/reset event sampling;
+- t+1 open entry and fifth future aligned-session close evaluation;
+- realized relative return and net alpha after the configured rotation cost;
+- direction-aware Regime and primary-market gates;
+- liquidity-aware PairScore;
+- Benjamini-Hochberg ADF FDR (`q <= 0.10`) as an additional formal gate.
 
-If the FX source falls back from CNH to CNY, use that fallback **consistently throughout the same Model Fair Value calculation** and surface the degradation. Do not mix CNH and CNY within one comparison merely to maximize data availability.
+Current frozen model version: `pair-engine-v1.0.0`. Its parameters must not be silently mutated. Any materially changed model must receive a new version and begin a new OOS record.
 
-If reliable anchors materially disagree on direction, cap the pair at `WATCH`.
+PairScore ranks candidates; it never substitutes for hard gates.
 
-## 7. Official PCF / primary-market regime
+## 8. Formal signal gates
 
-`etf_pcf` is a live point-in-time table, not a planned extension.
+A formal `TRADE` requires all applicable hard gates, including:
 
-Current collection uses official exchange sources for both SSE and SZSE ETFs and persists:
-
-- creation/redemption permission;
-- creation unit;
-- creation/redemption and net limits where disclosed;
-- cash-substitution parameters;
-- component-level premium/discount diagnostics;
-- `available_at` and provenance.
-
-SSE uses the exchange's 08:30 China-time disclosure timing. SZSE uses a conservative pre-open availability bound while retaining that the exact timestamp is not source-verified.
-
-PCF history is accumulated prospectively. Never fabricate historical PCF rows to make old backtests look complete.
-
-When current official PCF is unavailable, NAV-page subscription/redemption text may be used only as a **low-confidence fallback**. Only explicit restriction language such as `暂停申购` or `暂停赎回` may be promoted to `RESTRICTED`; labels such as `场内买入` / `场内卖出` are secondary-market descriptions and remain `UNKNOWN`.
-
-Regime interpretation is directional:
-
-- creation restriction weakens high-premium compression trades;
-- redemption restriction weakens discount-repair trades.
-
-## 8. No-lookahead model contract
-
-For a signal on day `t`:
-
-- 60-day median/MAD estimation ends at `t-1`;
-- 120-day AR(1), ADF and half-life estimation ends at `t-1`;
-- walk-forward backtests refit using only information available at each historical cutoff;
-- EOD model signals enter no earlier than the next tradable session unless another execution convention is explicitly modeled;
-- event/PCF/regime information must satisfy its own `available_at` cutoff.
-
-## 9. Historical event and realized-return contract
-
-Do not count every consecutive `abs(Robust Z) >= 2` day as an independent event.
-
-A new event requires a threshold crossing and reset below the configured reset level before another event is counted.
-
-AR(1) expected convergence is a forecast, not realized investment return. Historical strategy evaluation must use executable ETF returns:
-
-`realized_relative_return = Return(rotation_in) - Return(rotation_out)`
-
-`realized_net_alpha = realized_relative_return - applicable_cost`
-
-Distinguish `rotation_cost` from a complete `round_trip_cost`.
-
-## 10. Hard gates before ranking
-
-PairScore ranks eligible candidates; it must not substitute for eligibility.
-
-A formal `TRADE` candidate must pass at least:
-
-- `abs(Robust Z) >= 2.0`;
+- `abs(Robust Z) >= 2`;
 - `0 < Half-Life < 12`;
-- stationarity/stability gate;
-- `Net Expected Convergence 5d >= 0.8%`;
-- historical performance gate;
-- directionally compatible regime;
-- at least 120 aligned tradable pair observations;
-- walk-forward / PIT / freshness gates;
-- multi-anchor consistency when applicable;
-- **execution readiness for both legs at the actual execution decision point**.
+- stationarity/stability rule;
+- net expected convergence >= 0.8%;
+- adjusted historical win-rate rule;
+- at least 120 aligned usable observations;
+- model/PIT/freshness readiness;
+- directionally compatible Regime;
+- EOD next-session eligibility / execution policy;
+- BH/FDR gate.
 
-`STRONG TRADE` may additionally require `PairScore >= 85` and all hard gates. Do not lower thresholds to manufacture a signal.
+`STRONG TRADE` is a stricter subset. Missing data never lowers thresholds. A challenger model may veto or annotate, but must not upgrade a failed production gate.
 
-## 11. Source-run audit
+## 9. Product quality and tactical value
 
-Every logical source call is recorded in `source_runs` with:
+Product quality (`PQS`) is separate from tactical value (`TVS`).
 
-- run id;
-- resource/symbol;
-- requested range;
-- duration;
-- status (`SUCCESS`, `DEGRADED`, `FAILED`);
-- row count and observed min/max dates;
-- selected source(s);
-- errors.
+PQS components are fees, liquidity, AUM, tracking quality and structural age/stability. When the metadata source omits reported AUM, the scoring layer may use `shares × latest unit NAV` as a transparent `PROXY_SHARES_TIMES_LATEST_NAV`; raw metadata remains unchanged and the proxy method must be visible.
 
-A degraded primary source is not automatically critical when a fallback produced usable current data. The Skill should distinguish `SOURCE_DEGRADED` from `CRITICAL_SOURCE_FAILURE`.
+Tracking error is currently an explicitly labelled NAV-vs-NDX×FX annualized proxy, not an official fund-company tracking-error statistic.
 
-## 12. Remaining extensions
+TVS aggregates directional pair evidence cross-sectionally. A combined `Overall = 60% PQS + 40% TVS` is emitted only when PQS coverage is at least 70%; otherwise Overall stays missing.
 
-Still useful but not required for the current data model:
+## 10. Portfolio research layer
 
-- `etf_metadata`: AUM, fees, shares, inception date, tracking error and effective dates;
-- `etf_events`: point-in-time premium warnings, temporary halts/resumptions, market-maker additions/removals and other structural events;
-- an official exchange holiday calendar to replace the remaining weekday freshness heuristic;
-- a repository-native pair analysis engine implementing Robust Z, AR(1), stationarity, walk-forward event backtests and realized rotation P&L.
+Portfolio construction consumes only existing `TRADE` / `STRONG TRADE` rows and can never promote `WATCH` or `NO TRADE`.
 
-The downstream Skill must never interpret missing execution data, conservative PIT timing, source fallback, or prospective-only PCF history as if those limitations did not exist.
+Current conservative policy:
+
+- at most three selected pairs;
+- no ETF may appear in more than one simultaneous selected pair;
+- at most 40% research allocation per pair;
+- one pair therefore uses at most 40%, two at most 80%, with the remainder unallocated;
+- ranking is based on net edge, PairScore and liquidity.
+
+This is a research allocation, not an order-generation system.
+
+## 11. OOS evidence
+
+`model_registry.json` freezes the model hash. `oos_pair_states.csv` stores the complete daily 66-pair cross-section from the model's OOS start, not only later-profitable signals.
+
+For `pair-engine-v1.0.0`:
+
+- training end: 2026-09-08;
+- OOS start: 2026-09-09.
+
+Future OOS results cannot be backfilled or fabricated. Formal signals are evaluated only after the required future aligned sessions actually exist.
+
+## 12. Execution-cost evidence
+
+Production v1 retains its frozen assumed rotation-cost parameter. A separate weekday intraday capture workflow accumulates live bid/ask observations prospectively.
+
+`execution_cost_model.json` is a challenger calibration. It remains `INSUFFICIENT_HISTORY` until enough live-book observations exist and may not silently modify the frozen v1 cost assumption.
+
+Historical bid/ask data that was never observed must not be reconstructed from daily OHLC.
+
+## 13. Challenger models
+
+`common-factor-residual-challenger-v1` persists ETF residual rankings and candidate pairs. It is explicitly `production_gate=false`.
+
+Challengers are used to test robustness, structural breaks and alternative cross-sectional explanations. They may support or challenge a production signal but cannot upgrade a failed production Pair gate.
+
+## 14. Source health and validation
+
+Every logical source call is recorded in `source_runs`. `research_health.json` detects repeated degradation, current data warnings and model-readiness blocks while distinguishing a successful fallback from a critical failure.
+
+Research validation checks at least:
+
+- pair cardinality and duplicate pairs;
+- aligned-observation upper bounds;
+- formal signals have all gates true;
+- score ranges;
+- portfolio concentration/conflicts;
+- model registry existence;
+- history-depth and Regime-coverage outputs;
+- report/challenger/health outputs.
+
+## 15. FULL / DELTA daily output
+
+`daily_report.md` always retains the three semantic sections:
+
+1. data status / process;
+2. product quality + tactical ranking;
+3. Pair / signal ranking.
+
+A report is `FULL` on first run, model change, signal-state change, Regime change, readiness/health change, or whenever a formal signal exists. Ordinary unchanged days can be `DELTA`.
+
+## 16. Non-negotiable limitations
+
+The Skill must state, not hide, these evidence limits:
+
+- conservative NAV availability is not exact historical publication timing;
+- historical PCF/events remain incomplete until official evidence is actually retrieved;
+- empirical execution cost and OOS performance only accumulate prospectively;
+- AUM/tracking metrics labelled as proxies are not official reported statistics;
+- no output is a risk-free-arbitrage claim or automatic trading instruction.
