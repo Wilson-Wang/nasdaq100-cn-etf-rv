@@ -48,16 +48,21 @@ def _latest_date(group: pd.DataFrame, column: str) -> str | None:
     return dates.max().strftime("%Y-%m-%d")
 
 
+def _latest_row(group: pd.DataFrame, date_column: str) -> pd.Series | None:
+    if group.empty or date_column not in group.columns:
+        return None
+    dates = pd.to_datetime(group[date_column], errors="coerce")
+    if not dates.notna().any():
+        return None
+    return group.loc[dates.idxmax()]
+
+
 def _latest_pit_verified(group: pd.DataFrame) -> bool:
-    if group.empty or "pit_verified" not in group.columns:
+    row = _latest_row(group, "nav_date")
+    if row is None or "pit_verified" not in group.columns:
         return False
-    dates = pd.to_datetime(group.get("nav_date"), errors="coerce")
-    if dates.notna().any():
-        latest_index = dates.idxmax()
-        value = pd.Series([group.loc[latest_index, "pit_verified"]])
-    else:
-        value = group["pit_verified"].tail(1)
-    return bool(_normalize_bool(value).iloc[0]) if not value.empty else False
+    value = pd.Series([row.get("pit_verified")])
+    return bool(_normalize_bool(value).iloc[0])
 
 
 def _usable_price_count(group: pd.DataFrame) -> int:
@@ -71,6 +76,58 @@ def _usable_price_count(group: pd.DataFrame) -> int:
 def _source_degraded(symbol: str, failures: list[str]) -> bool:
     symbol_prefix = f"{symbol} "
     return any(message.startswith(symbol_prefix) for message in failures)
+
+
+def _restriction_state(value: object, restriction_terms: tuple[str, ...]) -> str:
+    """Return RESTRICTED only for explicit restriction language.
+
+    ETF NAV pages may use labels such as '场内买入/场内卖出'. Those labels are
+    secondary-market descriptions and must not be promoted to OPEN primary-market
+    creation/redemption states. Unknown/ambiguous text therefore remains UNKNOWN.
+    """
+    if value is None or pd.isna(value):
+        return "UNKNOWN"
+    text = str(value).strip()
+    if not text:
+        return "UNKNOWN"
+    if any(term in text for term in restriction_terms):
+        return "RESTRICTED"
+    return "UNKNOWN"
+
+
+def _nav_primary_market_fallback(group: pd.DataFrame) -> dict:
+    row = _latest_row(group, "nav_date")
+    if row is None:
+        return {
+            "source": "nav_status_fallback",
+            "as_of_date": None,
+            "creation_state": "UNKNOWN",
+            "redemption_state": "UNKNOWN",
+            "subscription_status_raw": None,
+            "redemption_status_raw": None,
+            "confidence": "LOW",
+        }
+
+    subscription_raw = row.get("subscription_status")
+    redemption_raw = row.get("redemption_status")
+    creation_state = _restriction_state(
+        subscription_raw,
+        ("暂停申购", "限制申购", "暂停大额申购", "限额申购"),
+    )
+    redemption_state = _restriction_state(
+        redemption_raw,
+        ("暂停赎回", "限制赎回", "暂停大额赎回", "限额赎回"),
+    )
+
+    return {
+        "source": "nav_status_fallback",
+        "as_of_date": _latest_date(group, "nav_date"),
+        "creation_state": creation_state,
+        "redemption_state": redemption_state,
+        "subscription_status_raw": None if pd.isna(subscription_raw) else str(subscription_raw),
+        "redemption_status_raw": None if pd.isna(redemption_raw) else str(redemption_raw),
+        "confidence": "LOW",
+    }
 
 
 def build_quality_report(
@@ -87,6 +144,11 @@ def build_quality_report(
     explicitly a heuristic until an exchange trading calendar is wired in.
     A source failure is recorded as degraded, but becomes critical only when
     the resulting current input is stale or absent.
+
+    Primary-market states are currently a low-confidence fallback from NAV-page
+    status text. Only explicit restriction language is promoted to RESTRICTED;
+    apparent secondary-market labels are never interpreted as proof of OPEN.
+    A future point-in-time PCF table should supersede this fallback.
     """
     prices = _read(prices_path)
     nav = _read(nav_path)
@@ -114,6 +176,7 @@ def build_quality_report(
         usable_prices = _usable_price_count(price_group)
         pit_verified = _latest_pit_verified(nav_group)
         source_degraded = _source_degraded(symbol, failures) or global_snapshot_failure
+        primary_market = _nav_primary_market_fallback(nav_group)
 
         stale_price = price_lag is None or price_lag > PRICE_FRESH_BDAYS
         stale_nav = nav_lag is None or nav_lag > NAV_FRESH_BDAYS
@@ -140,6 +203,15 @@ def build_quality_report(
             states.append("SOURCE_DEGRADED")
         if critical_source_failure:
             states.append("CRITICAL_SOURCE_FAILURE")
+        if primary_market["creation_state"] == "RESTRICTED":
+            states.append("CREATION_RESTRICTED_BY_NAV_STATUS")
+        if primary_market["redemption_state"] == "RESTRICTED":
+            states.append("REDEMPTION_RESTRICTED_BY_NAV_STATUS")
+        if (
+            primary_market["creation_state"] == "UNKNOWN"
+            and primary_market["redemption_state"] == "UNKNOWN"
+        ):
+            states.append("PRIMARY_MARKET_STATUS_LOW_CONFIDENCE")
 
         formal_signal_ready = (
             usable_prices >= 120
@@ -161,6 +233,7 @@ def build_quality_report(
             "pit_verified": pit_verified,
             "source_degraded": source_degraded,
             "critical_source_failure": critical_source_failure,
+            "primary_market": primary_market,
             "states": states or ["FRESH"],
             "formal_signal_ready": formal_signal_ready,
         }
@@ -173,6 +246,7 @@ def build_quality_report(
             "nav": NAV_FRESH_BDAYS,
             "snapshot": SNAPSHOT_FRESH_BDAYS,
         },
+        "primary_market_method": "low_confidence_nav_status_fallback_until_pcf",
         "formal_signal_ready_symbols": [
             symbol for symbol, item in by_symbol.items() if item["formal_signal_ready"]
         ],
