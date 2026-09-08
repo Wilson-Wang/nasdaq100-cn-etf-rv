@@ -33,15 +33,17 @@ For every symbol, `quality.by_symbol` includes:
 - state labels such as `LIMITED_RESEARCH_DEPTH`, `STALE_PRICE`, `STALE_NAV`, `STALE_SNAPSHOT`, `PIT_UNVERIFIED`, `SOURCE_DEGRADED`
 - `formal_signal_ready`
 
-Freshness is currently a conservative **weekday heuristic**, not a full China-exchange holiday calendar. The manifest records the method and thresholds so downstream analysis cannot mistake it for a hidden exact calendar.
+Freshness is currently a conservative **weekday + market-phase heuristic**, not a full China-exchange holiday calendar. The manifest records both the user-requested `as_of_date` and the derived `model_as_of_date` used for completed daily-data checks.
 
-A source failure does not automatically become critical. If fallback/cached data still covers the required current inputs, the symbol remains `SOURCE_DEGRADED` but the failure is not marked critical. It becomes `CRITICAL_SOURCE_FAILURE` when the degraded fetch coincides with a stale or absent price, NAV or snapshot input.
+The daily dataset is considered complete only after **15:30 Asia/Shanghai**. If a refresh is run on the current China-market date before 15:30, `model_as_of_date` rolls back to the previous weekday. Weekend dates also roll back to the previous weekday. Rows dated after `model_as_of_date` are excluded from readiness calculations, preventing a pre-close or historical quality check from accidentally consuming future rows already present in the local dataset.
 
-Current strict freshness prechecks are:
+Current strict freshness prechecks against `model_as_of_date` are:
 
-- price: no weekday lag from the requested EOD `as_of_date`;
+- price: no weekday lag;
 - NAV: at most 2 weekday lags;
 - snapshot: no weekday lag.
+
+A source failure does not automatically become critical. If fallback/cached data still covers the required current inputs, the symbol remains `SOURCE_DEGRADED` but the failure is not marked critical. It becomes `CRITICAL_SOURCE_FAILURE` when the degraded fetch coincides with a stale or absent price, NAV or snapshot input.
 
 Strict NAV-premium `formal_signal_ready` additionally requires `pit_verified=true`. The current NAV adapter does not yet prove historical publication/availability time, so refreshed NAV rows explicitly persist `pit_verified=false`, `availability_source=unverified`, and empty `published_at` / `available_at` until a source can substantiate those fields.
 
@@ -51,7 +53,7 @@ Baostock is the preferred daily-price source. AKShare/Eastmoney is a supplement 
 
 A first-non-empty fallback policy is not acceptable because a truncated primary response can silently leave a large historical hole. When multiple sources overlap, lower `source_priority` wins and the secondary source only fills missing dates.
 
-Each price row now carries `is_tradable`. Pair-model observations should be valid only when both ETF legs are tradable; suspended, zero-volume or invalid-price rows must be excluded from Robust Z history, AR/half-life estimation and executable P&L backtests.
+Each price row carries `is_tradable`. Pair-model observations should be valid only when both ETF legs are tradable; suspended, zero-volume or invalid-price rows must be excluded from Robust Z history, AR/half-life estimation and executable P&L backtests.
 
 Validation distinguishes the 120-observation formal-model minimum from the 250-observation research-depth target. Fewer than 250 usable observations is an explicit warning, not a silent success.
 
@@ -77,6 +79,8 @@ Skill v2.1.1 distinguishes three valuation anchors instead of treating official 
 1. **Official NAV** — disclosure and long-history anchor.
 2. **IOPV** — intraday primary/secondary-market reference when available at the same time slice.
 3. **Model Fair Value** — optional point-in-time estimate using a known NAV base, a Nasdaq-100/index proxy factor and an aligned FX factor.
+
+The snapshot pipeline persists mechanical IOPV/execution fields when inputs are valid: `mid`, `bid_ask_spread_pct`, `last_iopv_premium_pct`, and `mid_iopv_premium_pct`. Crossed or invalid quotes remain missing rather than being converted into synthetic execution metrics.
 
 These anchors must not be mixed across the two ETF legs inside one pair spread. If multiple reliable anchors materially disagree on direction, the pair is downgraded to at most `WATCH`.
 
@@ -189,4 +193,6 @@ Per-run source, timing, success, row count, min/max date and error diagnostics.
 
 ## 11. Current known limitation
 
-Coverage-aware supplementation is now implemented, but the secondary endpoint can itself fail transiently. Therefore a run can improve history for only a subset of symbols. Such partial success is valid and retained, but it must remain explicit through `by_symbol` coverage, `quality.by_symbol`, and source-failure records; downstream analysis must never promote global table coverage into pair-level readiness.
+Coverage-aware supplementation is implemented, but the secondary endpoint can itself fail transiently. Therefore a run can improve history for only a subset of symbols. Such partial success is valid and retained, but it must remain explicit through `by_symbol` coverage, `quality.by_symbol`, and source-failure records; downstream analysis must never promote global table coverage into pair-level readiness.
+
+The weekday/phase freshness heuristic does not yet encode Shanghai/Shenzhen exchange holidays. Until an exchange calendar is integrated, holiday sessions should be treated conservatively and the recorded `freshness_method` must remain visible to the downstream skill.
