@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T00:58:25+00:00",
+  "generated_at_utc": "2026-09-08T01:28:08+00:00",
   "requested_range": {
     "start": "2025-06-15",
     "end": "2026-09-08"
@@ -20,69 +20,75 @@
   ],
   "tables": {
     "prices": {
-      "rows": 2254,
+      "rows": 3624,
       "symbols": 12,
       "min_date": "2025-06-16",
       "max_date": "2026-09-07",
       "sources": {
         "baostock": 1980,
-        "akshare:eastmoney:fund_etf_hist_em": 274
+        "akshare:sina:fund_etf_hist_sina": 1233,
+        "akshare:eastmoney:fund_etf_hist_em": 411
       },
       "by_symbol": {
         "159501": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "159513": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "159632": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "159659": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "159660": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "159696": {
           "rows": 302,
@@ -109,62 +115,67 @@
           "precheck_250": true
         },
         "513100": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:eastmoney:fund_etf_hist_em": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "513110": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "513300": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "513390": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         },
         "513870": {
-          "rows": 165,
-          "tradable_rows": 165,
-          "min_date": "2026-01-05",
+          "rows": 302,
+          "tradable_rows": 302,
+          "min_date": "2025-06-16",
           "max_date": "2026-09-07",
           "sources": {
-            "baostock": 165
+            "baostock": 165,
+            "akshare:sina:fund_etf_hist_sina": 137
           },
           "precheck_120": true,
-          "precheck_250": false
+          "precheck_250": true
         }
       },
-      "sha256": "d877890f0d09db9d3fb7d7e8514144eddd96344b621eb5a61020788d90711022"
+      "sha256": "c697cc3f8547303ef037719b527d21a1d46ba9c34ae0dc9ca19fdb0ef5dc0025"
     },
     "nav": {
       "rows": 3612,
@@ -308,7 +319,112 @@
           "precheck_250": true
         }
       },
-      "sha256": "d5c9820a0f7098b0f12e4cd7721e798d353045351dac51950bbecb2a67a92e19"
+      "sha256": "d7bbce8c246502de00de671803dbfdc9214653b034e5ca704f65295303bf9382"
+    },
+    "pcf": {
+      "rows": 11,
+      "symbols": 11,
+      "by_symbol": {
+        "159501": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159513": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159632": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159659": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159660": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159696": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "513100": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "sse:official_pcf"
+        },
+        "513110": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "sse:official_pcf"
+        },
+        "513300": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "sse:official_pcf"
+        },
+        "513390": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "sse:official_pcf"
+        },
+        "513870": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "sse:official_pcf"
+        }
+      }
     },
     "snapshot": {
       "rows": 24,
@@ -452,21 +568,38 @@
           "precheck_250": false
         }
       },
-      "sha256": "fd514509d1706aadf4a4c06f4d1ec0eb7003efef4509c2e60aacbad8e9f25e6b"
+      "sha256": "7a91ddbb6f7737c58cd22d5829d41420abdb382f3a3dd1dcd38bcb258f169771"
+    },
+    "factor_inputs": {
+      "rows": 308,
+      "factors": {
+        "NDX": {
+          "rows": 308,
+          "min_date": "2025-06-16",
+          "max_date": "2026-09-04",
+          "sources": {
+            "akshare:sina:index_us_stock_sina": 308
+          }
+        }
+      },
+      "pit_usable_rows": 308,
+      "availability_method": "next_calendar_day_08_cn",
+      "availability_verified": false
     }
   },
   "quality": {
     "as_of_date": "2026-09-08",
     "model_as_of_date": "2026-09-07",
-    "observed_at_utc": "2026-09-08T00:58:25+00:00",
+    "observed_at_utc": "2026-09-08T01:28:08+00:00",
     "freshness_method": "weekday_phase_heuristic",
     "daily_data_ready_time_cn": "15:30",
     "thresholds_business_days": {
       "price": 0,
       "nav": 2,
-      "snapshot": 0
+      "snapshot": 0,
+      "pcf": 0
     },
-    "primary_market_method": "low_confidence_nav_status_fallback_until_pcf",
+    "primary_market_method": "official_pcf_then_nav_status_fallback",
     "formal_signal_ready_symbols": [],
     "by_symbol": {
       "159941": {
@@ -477,6 +610,9 @@
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -491,19 +627,23 @@
         },
         "states": [
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "159501": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -517,21 +657,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "159513": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -545,21 +688,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "159632": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -573,21 +719,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "159659": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -601,21 +750,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "159660": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -629,8 +781,8 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
@@ -644,6 +796,9 @@
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -658,21 +813,25 @@
         },
         "states": [
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "513100": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
@@ -684,21 +843,23 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
-          "SOURCE_DEGRADED",
+          "PCF_MISSING",
           "CREATION_RESTRICTED_BY_NAV_STATUS"
         ],
         "formal_signal_ready": false
       },
       "513110": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -712,21 +873,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "513300": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -740,21 +904,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "513390": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -768,21 +935,24 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
       },
       "513870": {
-        "usable_price_observations": 165,
+        "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
+        "pcf_last_date": null,
+        "pcf_lag_business_days": null,
+        "pcf_current_verified": false,
         "pit_verified": false,
         "source_degraded": true,
         "critical_source_failure": false,
@@ -796,8 +966,8 @@
           "confidence": "LOW"
         },
         "states": [
-          "LIMITED_RESEARCH_DEPTH",
           "PIT_UNVERIFIED",
+          "PCF_MISSING",
           "SOURCE_DEGRADED",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
@@ -808,26 +978,27 @@
   "parquet_mirrors": [
     "data/etf_prices.parquet",
     "data/etf_nav.parquet",
-    "data/etf_snapshot.parquet"
+    "data/etf_pcf.parquet",
+    "data/etf_snapshot.parquet",
+    "data/factor_inputs.parquet"
   ],
   "warnings": [
-    "fewer than 250 usable price observations (research-depth warning): 159501=165, 159513=165, 159632=165, 159659=165, 159660=165, 513100=165, 513110=165, 513300=165, 513390=165, 513870=165",
     "no PIT-verified NAV observations: 159501=0, 159513=0, 159632=0, 159659=0, 159660=0, 159696=0, 159941=0, 513100=0, 513110=0, 513300=0, 513390=0, 513870=0",
-    "snapshot missing usable IOPV: 159501, 159513, 159632, 159659, 159660, 159696, 159941, 513100, 513110, 513300, 513390, 513870",
-    "snapshot missing usable bid/ask: 159501, 159513, 159632, 159659, 159660, 159696, 159941, 513100, 513110, 513300, 513390, 513870"
+    "snapshot missing usable bid/ask: 159501, 159696, 159941, 513100",
+    "factor input missing: USDCNH"
   ],
   "failures": [
-    "159941 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "159941 PCF official: ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))",
     "159501 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159513 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159632 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159659 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159660 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "159696 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513100 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "513110 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "513300 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "513390 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513870 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+    "513870 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+    "factor USDCNH akshare:eastmoney:forex_hist_em: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
   ]
 }
