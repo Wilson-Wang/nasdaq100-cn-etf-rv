@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-08T00:47:55+00:00",
+  "generated_at_utc": "2026-09-08T00:58:25+00:00",
   "requested_range": {
     "start": "2025-06-15",
     "end": "2026-09-08"
@@ -164,7 +164,7 @@
           "precheck_250": false
         }
       },
-      "sha256": "ca0d2fe5d86e70b693e1e445ada7f55e1c078b45abe3f532072677a153afe6e5"
+      "sha256": "d877890f0d09db9d3fb7d7e8514144eddd96344b621eb5a61020788d90711022"
     },
     "nav": {
       "rows": 3612,
@@ -308,7 +308,7 @@
           "precheck_250": true
         }
       },
-      "sha256": "4da55c1ca8382018917a6cfb328f04292040052bfed9c067a07bb3b4f1b03db9"
+      "sha256": "d5c9820a0f7098b0f12e4cd7721e798d353045351dac51950bbecb2a67a92e19"
     },
     "snapshot": {
       "rows": 24,
@@ -452,12 +452,15 @@
           "precheck_250": false
         }
       },
-      "sha256": "f0af131d2f2dee23063e6540ba856b1184cfcb06c1956c15dbb912ffed88032a"
+      "sha256": "fd514509d1706aadf4a4c06f4d1ec0eb7003efef4509c2e60aacbad8e9f25e6b"
     }
   },
   "quality": {
     "as_of_date": "2026-09-08",
-    "freshness_method": "weekday_heuristic",
+    "model_as_of_date": "2026-09-07",
+    "observed_at_utc": "2026-09-08T00:58:25+00:00",
+    "freshness_method": "weekday_phase_heuristic",
+    "daily_data_ready_time_cn": "15:30",
     "thresholds_business_days": {
       "price": 0,
       "nav": 2,
@@ -469,14 +472,14 @@
       "159941": {
         "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -487,10 +490,8 @@
           "confidence": "LOW"
         },
         "states": [
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -498,14 +499,14 @@
       "159501": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -517,10 +518,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -528,14 +527,14 @@
       "159513": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -547,10 +546,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -558,14 +555,14 @@
       "159632": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -577,10 +574,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -588,14 +583,14 @@
       "159659": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -607,10 +602,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -618,14 +611,14 @@
       "159660": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -637,10 +630,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -648,14 +639,14 @@
       "159696": {
         "usable_price_observations": 302,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -666,10 +657,8 @@
           "confidence": "LOW"
         },
         "states": [
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -677,14 +666,14 @@
       "513100": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -696,10 +685,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "CREATION_RESTRICTED_BY_NAV_STATUS"
         ],
         "formal_signal_ready": false
@@ -707,14 +694,14 @@
       "513110": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -726,10 +713,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -737,14 +722,14 @@
       "513300": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -756,10 +741,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -767,14 +750,14 @@
       "513390": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -786,10 +769,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
@@ -797,14 +778,14 @@
       "513870": {
         "usable_price_observations": 165,
         "price_last_date": "2026-09-07",
-        "price_lag_business_days": 1,
+        "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
-        "nav_lag_business_days": 2,
-        "snapshot_last_date": "2026-09-08",
+        "nav_lag_business_days": 1,
+        "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
         "pit_verified": false,
         "source_degraded": true,
-        "critical_source_failure": true,
+        "critical_source_failure": false,
         "primary_market": {
           "source": "nav_status_fallback",
           "as_of_date": "2026-09-04",
@@ -816,10 +797,8 @@
         },
         "states": [
           "LIMITED_RESEARCH_DEPTH",
-          "STALE_PRICE",
           "PIT_UNVERIFIED",
           "SOURCE_DEGRADED",
-          "CRITICAL_SOURCE_FAILURE",
           "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
         ],
         "formal_signal_ready": false
