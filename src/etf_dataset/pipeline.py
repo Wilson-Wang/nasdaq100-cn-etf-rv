@@ -15,6 +15,7 @@ from .factors import (
 )
 from .pcf import fetch_official_pcf, pcf_summary, validate_pcf
 from .quality import build_quality_report
+from .refresh import DEFAULT_OVERLAP_DAYS, plan_incremental_start, read_existing
 from .snapshot import add_snapshot_derived_fields
 from .sources import (
     fetch_nav_akshare_em,
@@ -58,25 +59,71 @@ def update_dataset(
 
     data_dir = root / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
+    prices_path = data_dir / "etf_prices.csv"
+    nav_path = data_dir / "etf_nav.csv"
+    pcf_path = data_dir / "etf_pcf.csv"
+    snapshot_path = data_dir / "etf_snapshot.csv"
+    factors_path = data_dir / "factor_inputs.csv"
+
+    existing_prices = read_existing(prices_path)
+    existing_nav = read_existing(nav_path)
+    existing_factors = read_existing(factors_path)
+
     failures: list[str] = []
+    refresh_plan: dict[str, object] = {
+        "overlap_days": DEFAULT_OVERLAP_DAYS,
+        "prices": {},
+        "nav": {},
+        "factors": {},
+    }
 
     price_frames: list[pd.DataFrame] = []
     nav_frames: list[pd.DataFrame] = []
     pcf_frames: list[pd.DataFrame] = []
 
     for index, etf in enumerate(universe, start=1):
-        print(f"[{index}/{len(universe)}] {etf.symbol} prices", flush=True)
-        prices, price_errors = fetch_prices_with_fallback(etf, start_date, end_date)
+        price_start, price_mode = plan_incremental_start(
+            existing_prices,
+            date_column="date",
+            requested_start=start_date,
+            filter_column="symbol",
+            filter_value=etf.symbol,
+            minimum_observations=250,
+            require_requested_start_coverage=False,
+            tradable_column="is_tradable",
+        )
+        refresh_plan["prices"][etf.symbol] = {
+            "start": price_start,
+            "mode": price_mode,
+        }
+        print(
+            f"[{index}/{len(universe)}] {etf.symbol} prices {price_mode} from {price_start}",
+            flush=True,
+        )
+        prices, price_errors = fetch_prices_with_fallback(etf, price_start, end_date)
         failures.extend(price_errors)
         if not prices.empty:
             price_frames.append(prices)
 
-        print(f"[{index}/{len(universe)}] {etf.symbol} NAV", flush=True)
+        nav_start, nav_mode = plan_incremental_start(
+            existing_nav,
+            date_column="nav_date",
+            requested_start=start_date,
+            filter_column="symbol",
+            filter_value=etf.symbol,
+            minimum_observations=120,
+            require_requested_start_coverage=True,
+        )
+        refresh_plan["nav"][etf.symbol] = {"start": nav_start, "mode": nav_mode}
+        print(
+            f"[{index}/{len(universe)}] {etf.symbol} NAV {nav_mode} from {nav_start}",
+            flush=True,
+        )
         try:
             nav = run_with_timeout(
                 fetch_nav_akshare_em,
                 etf,
-                start_date,
+                nav_start,
                 end_date,
                 seconds=30,
             )
@@ -118,8 +165,21 @@ def update_dataset(
         ("NDX", "akshare:sina:index_us_stock_sina", fetch_ndx_sina),
         ("USDCNH", "akshare:eastmoney:forex_hist_em", fetch_usdcnh_em),
     ):
+        factor_start, factor_mode = plan_incremental_start(
+            existing_factors,
+            date_column="factor_date",
+            requested_start=start_date,
+            filter_column="factor_name",
+            filter_value=factor_name,
+            minimum_observations=120,
+            require_requested_start_coverage=True,
+        )
+        refresh_plan["factors"][factor_name] = {
+            "start": factor_start,
+            "mode": factor_mode,
+        }
         try:
-            factor = run_with_timeout(fetcher, start_date, end_date, seconds=30)
+            factor = run_with_timeout(fetcher, factor_start, end_date, seconds=30)
             if factor.empty:
                 failures.append(f"factor {factor_name} {source_name}: empty result")
             else:
@@ -129,12 +189,6 @@ def update_dataset(
                 f"factor {factor_name} {source_name}: {type(exc).__name__}: {exc}"
             )
     factors_in = pd.concat(factor_frames, ignore_index=True) if factor_frames else pd.DataFrame()
-
-    prices_path = data_dir / "etf_prices.csv"
-    nav_path = data_dir / "etf_nav.csv"
-    pcf_path = data_dir / "etf_pcf.csv"
-    snapshot_path = data_dir / "etf_snapshot.csv"
-    factors_path = data_dir / "factor_inputs.csv"
 
     upsert_csv(prices_path, prices_in, ["symbol", "date"])
     upsert_csv(nav_path, nav_in, ["symbol", "nav_date"])
@@ -182,6 +236,7 @@ def update_dataset(
     manifest = {
         "generated_at_utc": generated_at,
         "requested_range": {"start": start_date, "end": end_date},
+        "refresh_plan": refresh_plan,
         "universe": universe_symbols,
         "tables": tables,
         "quality": quality,
