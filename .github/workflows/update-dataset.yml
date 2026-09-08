@@ -2,6 +2,9 @@ name: Update ETF dataset
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "ops/manifest-refresh.trigger"
   schedule:
     - cron: "30 18 * * 1-5"
       timezone: "Asia/Shanghai"
