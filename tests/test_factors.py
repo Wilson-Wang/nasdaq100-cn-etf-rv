@@ -82,4 +82,4 @@ def test_validation_warns_when_one_factor_missing(tmp_path):
     path = tmp_path / "factor_inputs.csv"
     frame.to_csv(path, index=False)
 
-    assert validate_factor_inputs(path) == ["factor input missing: USDCNH"]
+    assert validate_factor_inputs(path) == ["factor input missing: USDCNH or USDCNY"]
