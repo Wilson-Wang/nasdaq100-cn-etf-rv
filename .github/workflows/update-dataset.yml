@@ -2,10 +2,6 @@ name: Update ETF dataset
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/dataset-update-trigger"
   schedule:
     - cron: "30 18 * * 1-5"
       timezone: "Asia/Shanghai"
