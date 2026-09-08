@@ -7,6 +7,12 @@ from pathlib import Path
 import pandas as pd
 
 from .config import load_universe
+from .factors import (
+    factor_summary,
+    fetch_ndx_sina,
+    fetch_usdcnh_em,
+    validate_factor_inputs,
+)
 from .quality import build_quality_report
 from .snapshot import add_snapshot_derived_fields
 from .sources import (
@@ -93,18 +99,39 @@ def update_dataset(
         snapshot_in = pd.DataFrame()
         failures.append(f"snapshot akshare:eastmoney: {type(exc).__name__}: {exc}")
 
+    factor_frames: list[pd.DataFrame] = []
+    print("fetching fair-value factor inputs", flush=True)
+    for factor_name, source_name, fetcher in (
+        ("NDX", "akshare:sina:index_us_stock_sina", fetch_ndx_sina),
+        ("USDCNH", "akshare:eastmoney:forex_hist_em", fetch_usdcnh_em),
+    ):
+        try:
+            factor = run_with_timeout(fetcher, start_date, end_date, seconds=30)
+            if factor.empty:
+                failures.append(f"factor {factor_name} {source_name}: empty result")
+            else:
+                factor_frames.append(factor)
+        except Exception as exc:
+            failures.append(
+                f"factor {factor_name} {source_name}: {type(exc).__name__}: {exc}"
+            )
+    factors_in = pd.concat(factor_frames, ignore_index=True) if factor_frames else pd.DataFrame()
+
     prices_path = data_dir / "etf_prices.csv"
     nav_path = data_dir / "etf_nav.csv"
     snapshot_path = data_dir / "etf_snapshot.csv"
+    factors_path = data_dir / "factor_inputs.csv"
 
     upsert_csv(prices_path, prices_in, ["symbol", "date"])
     upsert_csv(nav_path, nav_in, ["symbol", "nav_date"])
     if not snapshot_in.empty or snapshot_path.exists():
         upsert_csv(snapshot_path, snapshot_in, ["symbol", "data_date"])
+    if not factors_in.empty or factors_path.exists():
+        upsert_csv(factors_path, factors_in, ["factor_name", "factor_date"])
 
     parquet_paths: list[str] = []
     if write_parquet:
-        for path in (prices_path, nav_path, snapshot_path):
+        for path in (prices_path, nav_path, snapshot_path, factors_path):
             mirror = write_parquet_mirror(path)
             if mirror:
                 parquet_paths.append(str(mirror.relative_to(root)))
@@ -113,11 +140,13 @@ def update_dataset(
     warnings.extend(validate_prices(prices_path))
     warnings.extend(validate_nav(nav_path))
     warnings.extend(validate_snapshot(snapshot_path))
+    warnings.extend(validate_factor_inputs(factors_path))
 
     tables = {
         "prices": table_summary(prices_path, "date"),
         "nav": table_summary(nav_path, "nav_date"),
         "snapshot": table_summary(snapshot_path, "data_date"),
+        "factor_inputs": factor_summary(factors_path),
     }
     universe_symbols = [etf.symbol for etf in universe]
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -171,6 +200,7 @@ def main() -> int:
         f"updated prices={manifest['tables']['prices']['rows']} "
         f"nav={manifest['tables']['nav']['rows']} "
         f"snapshot={manifest['tables']['snapshot']['rows']} "
+        f"factors={manifest['tables']['factor_inputs']['rows']} "
         f"formal_ready={len(manifest['quality']['formal_signal_ready_symbols'])} "
         f"failures={len(manifest['failures'])}"
     )
