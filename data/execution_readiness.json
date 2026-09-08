@@ -1,0 +1,220 @@
+{
+  "as_of_date": "2026-09-08",
+  "method": "current_day_last_activity_and_bid_ask",
+  "policy": "formal trade signals require execution readiness in addition to model readiness; blocked symbols remain eligible for research/WATCH outputs",
+  "execution_ready_symbols": [
+    "159513",
+    "159632",
+    "159659",
+    "159660",
+    "513110",
+    "513300",
+    "513390",
+    "513870"
+  ],
+  "execution_blocked_symbols": [
+    "159941",
+    "159501",
+    "159696",
+    "513100"
+  ],
+  "by_symbol": {
+    "159941": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:12+08:00",
+      "last": 1.668,
+      "bid1": null,
+      "ask1": null,
+      "volume": null,
+      "amount": null,
+      "has_last": true,
+      "has_activity": false,
+      "has_valid_book": false,
+      "execution_ready": false,
+      "states": [
+        "NO_TRADING_ACTIVITY",
+        "NO_ACTIVE_BOOK"
+      ]
+    },
+    "159501": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:49:51+08:00",
+      "last": 2.11,
+      "bid1": null,
+      "ask1": null,
+      "volume": null,
+      "amount": null,
+      "has_last": true,
+      "has_activity": false,
+      "has_valid_book": false,
+      "execution_ready": false,
+      "states": [
+        "NO_TRADING_ACTIVITY",
+        "NO_ACTIVE_BOOK"
+      ]
+    },
+    "159513": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:51:09+08:00",
+      "last": 1.819,
+      "bid1": 1.818,
+      "ask1": 1.819,
+      "volume": 154010.0,
+      "amount": 28010250.6,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "159632": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:48+08:00",
+      "last": 2.482,
+      "bid1": 2.482,
+      "ask1": 2.483,
+      "volume": 190461.0,
+      "amount": 47234773.2,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "159659": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:48+08:00",
+      "last": 2.368,
+      "bid1": 2.367,
+      "ask1": 2.368,
+      "volume": 110006.0,
+      "amount": 26032008.7,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "159660": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:48+08:00",
+      "last": 2.385,
+      "bid1": 2.384,
+      "ask1": 2.385,
+      "volume": 211556.0,
+      "amount": 50448294.3,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "159696": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:42+08:00",
+      "last": 2.048,
+      "bid1": null,
+      "ask1": null,
+      "volume": null,
+      "amount": null,
+      "has_last": true,
+      "has_activity": false,
+      "has_valid_book": false,
+      "execution_ready": false,
+      "states": [
+        "NO_TRADING_ACTIVITY",
+        "NO_ACTIVE_BOOK"
+      ]
+    },
+    "513100": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 08:30:25+08:00",
+      "last": null,
+      "bid1": null,
+      "ask1": null,
+      "volume": null,
+      "amount": null,
+      "has_last": false,
+      "has_activity": false,
+      "has_valid_book": false,
+      "execution_ready": false,
+      "states": [
+        "NO_CURRENT_PRICE",
+        "NO_TRADING_ACTIVITY",
+        "NO_ACTIVE_BOOK"
+      ]
+    },
+    "513110": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:52:10+08:00",
+      "last": 2.507,
+      "bid1": 2.507,
+      "ask1": 2.508,
+      "volume": 46471.0,
+      "amount": 11648532.0,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "513300": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:51:44+08:00",
+      "last": 2.709,
+      "bid1": 2.709,
+      "ask1": 2.71,
+      "volume": 156215.0,
+      "amount": 42342893.0,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "513390": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:52:53+08:00",
+      "last": 2.451,
+      "bid1": 2.45,
+      "ask1": 2.451,
+      "volume": 114019.0,
+      "amount": 27937144.0,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    },
+    "513870": {
+      "snapshot_date": "2026-09-08",
+      "quote_updated_at": "2026-09-08 09:53:37+08:00",
+      "last": 2.082,
+      "bid1": 2.081,
+      "ask1": 2.082,
+      "volume": 52836.0,
+      "amount": 10998319.0,
+      "has_last": true,
+      "has_activity": true,
+      "has_valid_book": true,
+      "execution_ready": true,
+      "states": [
+        "EXECUTION_READY"
+      ]
+    }
+  }
+}

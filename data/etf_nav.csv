@@ -299,7 +299,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159501,2026-09-01,1.8458,1.8458,-1.32,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:34+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159501,2026-09-02,1.8505,1.8505,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:34+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159501,2026-09-03,1.8715,1.8715,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:34+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159501,2026-09-04,1.875,1.875,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:34+00:00,,2026-09-08T09:42:34+08:00,first_seen_ingestion_bound,False,False,True
+159501,2026-09-04,1.875,1.875,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:35+00:00,,2026-09-08T09:52:35+08:00,first_seen_ingestion_bound,False,False,True
 159513,2025-06-16,1.324,1.324,1.41,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:23:38+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159513,2025-06-17,1.3103,1.3103,-1.03,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:23:38+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159513,2025-06-18,1.3105,1.3105,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:23:38+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -600,7 +600,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159513,2026-09-01,1.6412,1.6412,-1.32,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:40+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159513,2026-09-02,1.6453,1.6453,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:40+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159513,2026-09-03,1.664,1.664,1.14,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:40+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159513,2026-09-04,1.6669,1.6669,0.17,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:40+00:00,,2026-09-08T09:42:40+08:00,first_seen_ingestion_bound,False,False,True
+159513,2026-09-04,1.6669,1.6669,0.17,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:39+00:00,,2026-09-08T09:52:39+08:00,first_seen_ingestion_bound,False,False,True
 159632,2025-06-16,1.7903,1.7903,1.43,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:01+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159632,2025-06-17,1.7714,1.7714,-1.06,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:01+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159632,2025-06-18,1.7717,1.7717,0.02,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:01+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -901,7 +901,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159632,2026-09-01,2.2319,2.2319,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:47+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159632,2026-09-02,2.2375,2.2375,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:47+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159632,2026-09-03,2.2629,2.2629,1.14,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:47+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159632,2026-09-04,2.2671,2.2671,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:47+00:00,,2026-09-08T09:42:47+08:00,first_seen_ingestion_bound,False,False,True
+159632,2026-09-04,2.2671,2.2671,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:45+00:00,,2026-09-08T09:52:45+08:00,first_seen_ingestion_bound,False,False,True
 159659,2025-06-16,1.6967,1.6967,1.43,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:30+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159659,2025-06-17,1.6789,1.6789,-1.05,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:30+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159659,2025-06-18,1.6793,1.6793,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:30+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -1202,7 +1202,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159659,2026-09-01,2.1228,2.1228,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:54+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159659,2026-09-02,2.1282,2.1282,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:54+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159659,2026-09-03,2.1523,2.1523,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:54+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159659,2026-09-04,2.1565,2.1565,0.2,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:54+00:00,,2026-09-08T09:42:54+08:00,first_seen_ingestion_bound,False,False,True
+159659,2026-09-04,2.1565,2.1565,0.2,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:50+00:00,,2026-09-08T09:52:50+08:00,first_seen_ingestion_bound,False,False,True
 159660,2025-06-16,1.7205,1.7205,1.44,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:57+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159660,2025-06-17,1.7023,1.7023,-1.06,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:57+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159660,2025-06-18,1.7027,1.7027,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:24:57+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -1503,7 +1503,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159660,2026-09-01,2.1476,2.1476,-1.32,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:59+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159660,2026-09-02,2.1531,2.1531,0.26,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:59+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159660,2026-09-03,2.1775,2.1775,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:59+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159660,2026-09-04,2.1817,2.1817,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:59+00:00,,2026-09-08T09:42:59+08:00,first_seen_ingestion_bound,False,False,True
+159660,2026-09-04,2.1817,2.1817,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:55+00:00,,2026-09-08T09:52:55+08:00,first_seen_ingestion_bound,False,False,True
 159696,2025-06-16,1.4631,1.4631,1.44,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:23+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159696,2025-06-17,1.4477,1.4477,-1.05,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:23+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159696,2025-06-18,1.448,1.448,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:23+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -1804,7 +1804,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159696,2026-09-01,1.8293,1.8293,-1.32,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:09+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159696,2026-09-02,1.834,1.834,0.26,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:09+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159696,2026-09-03,1.8548,1.8548,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:09+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159696,2026-09-04,1.8583,1.8583,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:09+00:00,,2026-09-08T09:43:09+08:00,first_seen_ingestion_bound,False,False,True
+159696,2026-09-04,1.8583,1.8583,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:01+00:00,,2026-09-08T09:53:01+08:00,first_seen_ingestion_bound,False,False,True
 159941,2025-06-16,1.187,4.748,1.41,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:22:48+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159941,2025-06-17,1.1746,4.6984,-1.04,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:22:48+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159941,2025-06-18,1.1749,4.6996,0.03,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:22:48+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -2105,7 +2105,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 159941,2026-09-01,1.4714,5.8856,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:17+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159941,2026-09-02,1.4751,5.9004,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:17+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 159941,2026-09-03,1.4918,5.9672,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:17+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-159941,2026-09-04,1.4947,5.9788,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:42:17+00:00,,2026-09-08T09:42:17+08:00,first_seen_ingestion_bound,False,False,True
+159941,2026-09-04,1.4947,5.9788,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:52:16+00:00,,2026-09-08T09:52:16+08:00,first_seen_ingestion_bound,False,False,True
 513100,2025-06-16,1.578,7.89,1.48,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:47+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513100,2025-06-17,1.561,7.805,-1.08,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:47+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513100,2025-06-18,1.561,7.805,0.0,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:25:47+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -2406,7 +2406,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 513100,2026-09-01,1.9652,9.826,-1.32,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:15+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513100,2026-09-02,1.9702,9.851,0.25,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:15+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513100,2026-09-03,1.9925,9.9625,1.13,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:15+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-513100,2026-09-04,1.9962,9.981,0.19,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:15+00:00,,2026-09-08T09:43:15+08:00,first_seen_ingestion_bound,False,False,True
+513100,2026-09-04,1.9962,9.981,0.19,暂停申购,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:06+00:00,,2026-09-08T09:53:06+08:00,first_seen_ingestion_bound,False,False,True
 513110,2025-06-16,1.8185,1.8185,1.43,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:13+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513110,2025-06-17,1.7993,1.7993,-1.06,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:13+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513110,2025-06-18,1.7997,1.7997,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:13+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -2707,7 +2707,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 513110,2026-09-01,2.2566,2.2566,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:20+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513110,2026-09-02,2.2622,2.2622,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:20+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513110,2026-09-03,2.2877,2.2877,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:20+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-513110,2026-09-04,2.2921,2.2921,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:20+00:00,,2026-09-08T09:43:20+08:00,first_seen_ingestion_bound,False,False,True
+513110,2026-09-04,2.2921,2.2921,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:11+00:00,,2026-09-08T09:53:11+08:00,first_seen_ingestion_bound,False,False,True
 513300,2025-06-16,1.9689,1.9689,1.39,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:38+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513300,2025-06-17,1.9499,1.9499,-0.97,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:38+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513300,2025-06-18,1.9509,1.9509,0.05,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:26:38+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -3008,7 +3008,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 513300,2026-09-01,2.4332,2.4332,-1.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:26+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513300,2026-09-02,2.4386,2.4386,0.22,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:26+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513300,2026-09-03,2.4657,2.4657,1.11,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:26+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-513300,2026-09-04,2.4685,2.4685,0.11,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:26+00:00,,2026-09-08T09:43:26+08:00,first_seen_ingestion_bound,False,False,True
+513300,2026-09-04,2.4685,2.4685,0.11,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:15+00:00,,2026-09-08T09:53:15+08:00,first_seen_ingestion_bound,False,False,True
 513390,2025-06-16,1.7676,1.7676,1.43,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:06+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513390,2025-06-17,1.749,1.749,-1.05,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:06+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513390,2025-06-18,1.7494,1.7494,0.02,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:06+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -3309,7 +3309,7 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 513390,2026-09-01,2.206,2.206,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:31+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513390,2026-09-02,2.2116,2.2116,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:31+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513390,2026-09-03,2.2365,2.2365,1.13,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:31+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-513390,2026-09-04,2.241,2.241,0.2,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:31+00:00,,2026-09-08T09:43:31+08:00,first_seen_ingestion_bound,False,False,True
+513390,2026-09-04,2.241,2.241,0.2,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:19+00:00,,2026-09-08T09:53:19+08:00,first_seen_ingestion_bound,False,False,True
 513870,2025-06-16,1.4982,1.4982,1.44,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:31+00:00,,2025-06-18T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513870,2025-06-17,1.4823,1.4823,-1.06,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:31+00:00,,2025-06-19T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513870,2025-06-18,1.4827,1.4827,0.03,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:27:31+00:00,,2025-06-20T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
@@ -3610,4 +3610,4 @@ symbol,nav_date,unit_nav,accumulated_nav,daily_growth_pct,subscription_status,re
 513870,2026-09-01,1.8714,1.8714,-1.31,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:36+00:00,,2026-09-03T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513870,2026-09-02,1.8761,1.8761,0.25,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:36+00:00,,2026-09-04T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
 513870,2026-09-03,1.8974,1.8974,1.14,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:36+00:00,,2026-09-07T23:59:59+08:00,earliest_safe_bound:first_seen_or_qdii_tplus2,False,False,True
-513870,2026-09-04,1.901,1.901,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:43:36+00:00,,2026-09-08T09:43:36+08:00,first_seen_ingestion_bound,False,False,True
+513870,2026-09-04,1.901,1.901,0.19,场内买入,场内卖出,akshare:eastmoney:fund_etf_fund_info_em,10,2026-09-08T01:53:27+00:00,,2026-09-08T09:53:27+08:00,first_seen_ingestion_bound,False,False,True

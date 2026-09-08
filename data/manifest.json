@@ -1,6 +1,6 @@
 {
-  "run_id": "20260908T014212616092Z",
-  "generated_at_utc": "2026-09-08T01:44:40+00:00",
+  "run_id": "20260908T015210654157Z",
+  "generated_at_utc": "2026-09-08T01:54:31+00:00",
   "requested_range": {
     "start": "2025-06-15",
     "end": "2026-09-08"
@@ -113,9 +113,9 @@
         "mode": "INCREMENTAL"
       },
       "FX": {
-        "start": "2025-06-15",
-        "mode": "FULL_NO_MATCHING_DATA",
-        "existing_preference": "USDCNH",
+        "start": "2026-08-25",
+        "mode": "INCREMENTAL",
+        "existing_preference": "USDCNY",
         "source_preference": [
           "USDCNH",
           "USDCNY"
@@ -438,7 +438,7 @@
           "precheck_250": true
         }
       },
-      "sha256": "3eab7ab031612735f40d4fc1274c21fcf4fb3a965e40334fb2fa5dff89142436"
+      "sha256": "aada2bb6f796b6e70b53ba04c2b336e05a822e5bc86756294c042112d560fa27"
     },
     "pcf": {
       "rows": 12,
@@ -696,7 +696,7 @@
           "precheck_250": false
         }
       },
-      "sha256": "656761be8284d2aaf3758fe7e9e254623a7efe84fe35eeaec73f5ba62411e57b"
+      "sha256": "b787a280f754f58fa48cd008796e107341a61fdbed791e008b40957537d7fa4c"
     },
     "factor_inputs": {
       "rows": 611,
@@ -724,7 +724,7 @@
       "preferred_fx_factor": "USDCNY"
     },
     "source_runs": {
-      "rows": 39,
+      "rows": 78,
       "current_run_rows": 39,
       "current_run_statuses": {
         "SUCCESS": 38,
@@ -735,8 +735,8 @@
   "quality": {
     "as_of_date": "2026-09-08",
     "model_as_of_date": "2026-09-07",
-    "information_cutoff_utc": "2026-09-08T01:44:40+00:00",
-    "observed_at_utc": "2026-09-08T01:44:40+00:00",
+    "information_cutoff_utc": "2026-09-08T01:54:31+00:00",
+    "observed_at_utc": "2026-09-08T01:54:31+00:00",
     "freshness_method": "weekday_phase_heuristic_with_availability_cutoff",
     "daily_data_ready_time_cn": "15:30",
     "thresholds_business_days": {
@@ -1332,5 +1332,225 @@
   ],
   "failures": [
     "factor USDCNH akshare:eastmoney:forex_hist_em: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
-  ]
+  ],
+  "execution": {
+    "as_of_date": "2026-09-08",
+    "method": "current_day_last_activity_and_bid_ask",
+    "policy": "formal trade signals require execution readiness in addition to model readiness; blocked symbols remain eligible for research/WATCH outputs",
+    "execution_ready_symbols": [
+      "159513",
+      "159632",
+      "159659",
+      "159660",
+      "513110",
+      "513300",
+      "513390",
+      "513870"
+    ],
+    "execution_blocked_symbols": [
+      "159941",
+      "159501",
+      "159696",
+      "513100"
+    ],
+    "by_symbol": {
+      "159941": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:12+08:00",
+        "last": 1.668,
+        "bid1": null,
+        "ask1": null,
+        "volume": null,
+        "amount": null,
+        "has_last": true,
+        "has_activity": false,
+        "has_valid_book": false,
+        "execution_ready": false,
+        "states": [
+          "NO_TRADING_ACTIVITY",
+          "NO_ACTIVE_BOOK"
+        ]
+      },
+      "159501": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:49:51+08:00",
+        "last": 2.11,
+        "bid1": null,
+        "ask1": null,
+        "volume": null,
+        "amount": null,
+        "has_last": true,
+        "has_activity": false,
+        "has_valid_book": false,
+        "execution_ready": false,
+        "states": [
+          "NO_TRADING_ACTIVITY",
+          "NO_ACTIVE_BOOK"
+        ]
+      },
+      "159513": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:51:09+08:00",
+        "last": 1.819,
+        "bid1": 1.818,
+        "ask1": 1.819,
+        "volume": 154010.0,
+        "amount": 28010250.6,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "159632": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:48+08:00",
+        "last": 2.482,
+        "bid1": 2.482,
+        "ask1": 2.483,
+        "volume": 190461.0,
+        "amount": 47234773.2,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "159659": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:48+08:00",
+        "last": 2.368,
+        "bid1": 2.367,
+        "ask1": 2.368,
+        "volume": 110006.0,
+        "amount": 26032008.7,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "159660": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:48+08:00",
+        "last": 2.385,
+        "bid1": 2.384,
+        "ask1": 2.385,
+        "volume": 211556.0,
+        "amount": 50448294.3,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "159696": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:42+08:00",
+        "last": 2.048,
+        "bid1": null,
+        "ask1": null,
+        "volume": null,
+        "amount": null,
+        "has_last": true,
+        "has_activity": false,
+        "has_valid_book": false,
+        "execution_ready": false,
+        "states": [
+          "NO_TRADING_ACTIVITY",
+          "NO_ACTIVE_BOOK"
+        ]
+      },
+      "513100": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 08:30:25+08:00",
+        "last": null,
+        "bid1": null,
+        "ask1": null,
+        "volume": null,
+        "amount": null,
+        "has_last": false,
+        "has_activity": false,
+        "has_valid_book": false,
+        "execution_ready": false,
+        "states": [
+          "NO_CURRENT_PRICE",
+          "NO_TRADING_ACTIVITY",
+          "NO_ACTIVE_BOOK"
+        ]
+      },
+      "513110": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:52:10+08:00",
+        "last": 2.507,
+        "bid1": 2.507,
+        "ask1": 2.508,
+        "volume": 46471.0,
+        "amount": 11648532.0,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "513300": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:51:44+08:00",
+        "last": 2.709,
+        "bid1": 2.709,
+        "ask1": 2.71,
+        "volume": 156215.0,
+        "amount": 42342893.0,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "513390": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:52:53+08:00",
+        "last": 2.451,
+        "bid1": 2.45,
+        "ask1": 2.451,
+        "volume": 114019.0,
+        "amount": 27937144.0,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      },
+      "513870": {
+        "snapshot_date": "2026-09-08",
+        "quote_updated_at": "2026-09-08 09:53:37+08:00",
+        "last": 2.082,
+        "bid1": 2.081,
+        "ask1": 2.082,
+        "volume": 52836.0,
+        "amount": 10998319.0,
+        "has_last": true,
+        "has_activity": true,
+        "has_valid_book": true,
+        "execution_ready": true,
+        "states": [
+          "EXECUTION_READY"
+        ]
+      }
+    }
+  }
 }
