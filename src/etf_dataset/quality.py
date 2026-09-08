@@ -5,9 +5,9 @@ from pathlib import Path
 import pandas as pd
 
 
-PRICE_FRESH_BDAYS = 1
-NAV_FRESH_BDAYS = 3
-SNAPSHOT_FRESH_BDAYS = 1
+PRICE_FRESH_BDAYS = 0
+NAV_FRESH_BDAYS = 2
+SNAPSHOT_FRESH_BDAYS = 0
 
 
 def _read(path: str | Path) -> pd.DataFrame:
@@ -81,10 +81,12 @@ def build_quality_report(
     as_of_date: str,
     failures: list[str],
 ) -> dict:
-    """Build a signal-readiness report separate from structural validation.
+    """Build signal-readiness separately from structural file validation.
 
-    Freshness uses weekday lag as a deterministic precheck. It is intentionally
-    labeled a heuristic until an exchange trading calendar is wired in.
+    Freshness uses weekday lag as a deterministic conservative precheck. It is
+    explicitly a heuristic until an exchange trading calendar is wired in.
+    A source failure is recorded as degraded, but becomes critical only when
+    the resulting current input is stale or absent.
     """
     prices = _read(prices_path)
     nav = _read(nav_path)
@@ -113,6 +115,11 @@ def build_quality_report(
         pit_verified = _latest_pit_verified(nav_group)
         source_degraded = _source_degraded(symbol, failures) or global_snapshot_failure
 
+        stale_price = price_lag is None or price_lag > PRICE_FRESH_BDAYS
+        stale_nav = nav_lag is None or nav_lag > NAV_FRESH_BDAYS
+        stale_snapshot = snapshot_lag is None or snapshot_lag > SNAPSHOT_FRESH_BDAYS
+        critical_source_failure = source_degraded and (stale_price or stale_nav or stale_snapshot)
+
         states: list[str] = []
         if usable_prices < 60:
             states.append("INSUFFICIENT_DATA")
@@ -121,27 +128,26 @@ def build_quality_report(
         elif usable_prices < 250:
             states.append("LIMITED_RESEARCH_DEPTH")
 
-        if price_lag is None or price_lag > PRICE_FRESH_BDAYS:
+        if stale_price:
             states.append("STALE_PRICE")
-        if nav_lag is None or nav_lag > NAV_FRESH_BDAYS:
+        if stale_nav:
             states.append("STALE_NAV")
-        if snapshot_lag is None or snapshot_lag > SNAPSHOT_FRESH_BDAYS:
+        if stale_snapshot:
             states.append("STALE_SNAPSHOT")
         if not pit_verified:
             states.append("PIT_UNVERIFIED")
         if source_degraded:
             states.append("SOURCE_DEGRADED")
+        if critical_source_failure:
+            states.append("CRITICAL_SOURCE_FAILURE")
 
         formal_signal_ready = (
             usable_prices >= 120
-            and price_lag is not None
-            and price_lag <= PRICE_FRESH_BDAYS
-            and nav_lag is not None
-            and nav_lag <= NAV_FRESH_BDAYS
-            and snapshot_lag is not None
-            and snapshot_lag <= SNAPSHOT_FRESH_BDAYS
+            and not stale_price
+            and not stale_nav
+            and not stale_snapshot
             and pit_verified
-            and not source_degraded
+            and not critical_source_failure
         )
 
         by_symbol[symbol] = {
@@ -154,6 +160,7 @@ def build_quality_report(
             "snapshot_lag_business_days": snapshot_lag,
             "pit_verified": pit_verified,
             "source_degraded": source_degraded,
+            "critical_source_failure": critical_source_failure,
             "states": states or ["FRESH"],
             "formal_signal_ready": formal_signal_ready,
         }
