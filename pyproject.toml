@@ -14,9 +14,11 @@ dependencies = [
   "akshare>=1.18.94,<1.19",
   "baostock>=0.9.3,<1",
   "duckdb>=1.1,<2",
+  "numpy>=1.26,<3",
   "pandas>=2.2,<3",
   "pyarrow>=16,<24",
   "requests>=2.32,<3",
+  "statsmodels>=0.14,<1",
 ]
 
 [project.optional-dependencies]
