@@ -6,6 +6,13 @@ from pathlib import Path
 
 import pandas as pd
 
+from .audit import (
+    build_source_run_record,
+    new_run_id,
+    records_frame,
+    source_run_summary,
+    utc_now,
+)
 from .config import load_universe
 from .factors import (
     factor_summary,
@@ -57,6 +64,7 @@ def update_dataset(
     if selected_symbols:
         universe = [etf for etf in universe if etf.symbol in selected_symbols]
 
+    run_id = new_run_id()
     data_dir = root / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     prices_path = data_dir / "etf_prices.csv"
@@ -64,12 +72,14 @@ def update_dataset(
     pcf_path = data_dir / "etf_pcf.csv"
     snapshot_path = data_dir / "etf_snapshot.csv"
     factors_path = data_dir / "factor_inputs.csv"
+    source_runs_path = data_dir / "source_runs.csv"
 
     existing_prices = read_existing(prices_path)
     existing_nav = read_existing(nav_path)
     existing_factors = read_existing(factors_path)
 
     failures: list[str] = []
+    source_records: list[dict[str, object]] = []
     refresh_plan: dict[str, object] = {
         "overlap_days": DEFAULT_OVERLAP_DAYS,
         "prices": {},
@@ -100,8 +110,24 @@ def update_dataset(
             f"[{index}/{len(universe)}] {etf.symbol} prices {price_mode} from {price_start}",
             flush=True,
         )
+        started = utc_now()
         prices, price_errors = fetch_prices_with_fallback(etf, price_start, end_date)
+        finished = utc_now()
         failures.extend(price_errors)
+        source_records.append(
+            build_source_run_record(
+                run_id=run_id,
+                resource="prices",
+                symbol=etf.symbol,
+                requested_start=price_start,
+                requested_end=end_date,
+                started_at=started,
+                finished_at=finished,
+                frame=prices,
+                date_column="date",
+                errors=price_errors,
+            )
+        )
         if not prices.empty:
             price_frames.append(prices)
 
@@ -119,6 +145,9 @@ def update_dataset(
             f"[{index}/{len(universe)}] {etf.symbol} NAV {nav_mode} from {nav_start}",
             flush=True,
         )
+        started = utc_now()
+        nav_errors: list[str] = []
+        nav = pd.DataFrame()
         try:
             nav = run_with_timeout(
                 fetch_nav_akshare_em,
@@ -128,21 +157,59 @@ def update_dataset(
                 seconds=30,
             )
             if nav.empty:
-                failures.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
+                nav_errors.append(f"{etf.symbol} NAV akshare:eastmoney: empty result")
             else:
-                nav_frames.append(_add_unverified_nav_pit_fields(nav))
+                nav = _add_unverified_nav_pit_fields(nav)
+                nav_frames.append(nav)
         except Exception as exc:
-            failures.append(f"{etf.symbol} NAV akshare:eastmoney: {type(exc).__name__}: {exc}")
+            nav_errors.append(
+                f"{etf.symbol} NAV akshare:eastmoney: {type(exc).__name__}: {exc}"
+            )
+        finished = utc_now()
+        failures.extend(nav_errors)
+        source_records.append(
+            build_source_run_record(
+                run_id=run_id,
+                resource="nav",
+                symbol=etf.symbol,
+                requested_start=nav_start,
+                requested_end=end_date,
+                started_at=started,
+                finished_at=finished,
+                frame=nav,
+                date_column="nav_date",
+                errors=nav_errors,
+            )
+        )
 
         print(f"[{index}/{len(universe)}] {etf.symbol} official PCF", flush=True)
+        started = utc_now()
+        pcf_errors: list[str] = []
+        pcf = pd.DataFrame()
         try:
             pcf = run_with_timeout(fetch_official_pcf, etf, end_date, seconds=30)
             if pcf.empty:
-                failures.append(f"{etf.symbol} PCF official: empty result")
+                pcf_errors.append(f"{etf.symbol} PCF official: empty result")
             else:
                 pcf_frames.append(pcf)
         except Exception as exc:
-            failures.append(f"{etf.symbol} PCF official: {type(exc).__name__}: {exc}")
+            pcf_errors.append(f"{etf.symbol} PCF official: {type(exc).__name__}: {exc}")
+        finished = utc_now()
+        failures.extend(pcf_errors)
+        source_records.append(
+            build_source_run_record(
+                run_id=run_id,
+                resource="pcf",
+                symbol=etf.symbol,
+                requested_start=end_date,
+                requested_end=end_date,
+                started_at=started,
+                finished_at=finished,
+                frame=pcf,
+                date_column="date",
+                errors=pcf_errors,
+            )
+        )
 
     prices_in = pd.concat(price_frames, ignore_index=True) if price_frames else pd.DataFrame()
     nav_in = pd.concat(nav_frames, ignore_index=True) if nav_frames else pd.DataFrame()
@@ -150,14 +217,32 @@ def update_dataset(
 
     symbols = {etf.symbol for etf in universe}
     print("fetching latest ETF snapshot", flush=True)
+    started = utc_now()
+    snapshot_errors: list[str] = []
     try:
         snapshot_in = run_with_timeout(fetch_snapshot_akshare_em, symbols, seconds=45)
         snapshot_in = add_snapshot_derived_fields(snapshot_in)
         if snapshot_in.empty:
-            failures.append("snapshot akshare:eastmoney: empty result")
+            snapshot_errors.append("snapshot akshare:eastmoney: empty result")
     except Exception as exc:
         snapshot_in = pd.DataFrame()
-        failures.append(f"snapshot akshare:eastmoney: {type(exc).__name__}: {exc}")
+        snapshot_errors.append(f"snapshot akshare:eastmoney: {type(exc).__name__}: {exc}")
+    finished = utc_now()
+    failures.extend(snapshot_errors)
+    source_records.append(
+        build_source_run_record(
+            run_id=run_id,
+            resource="snapshot",
+            symbol="*",
+            requested_start=end_date,
+            requested_end=end_date,
+            started_at=started,
+            finished_at=finished,
+            frame=snapshot_in,
+            date_column="data_date",
+            errors=snapshot_errors,
+        )
+    )
 
     factor_frames: list[pd.DataFrame] = []
     print("fetching fair-value factor inputs", flush=True)
@@ -178,17 +263,37 @@ def update_dataset(
             "start": factor_start,
             "mode": factor_mode,
         }
+        started = utc_now()
+        factor_errors: list[str] = []
+        factor = pd.DataFrame()
         try:
             factor = run_with_timeout(fetcher, factor_start, end_date, seconds=30)
             if factor.empty:
-                failures.append(f"factor {factor_name} {source_name}: empty result")
+                factor_errors.append(f"factor {factor_name} {source_name}: empty result")
             else:
                 factor_frames.append(factor)
         except Exception as exc:
-            failures.append(
+            factor_errors.append(
                 f"factor {factor_name} {source_name}: {type(exc).__name__}: {exc}"
             )
+        finished = utc_now()
+        failures.extend(factor_errors)
+        source_records.append(
+            build_source_run_record(
+                run_id=run_id,
+                resource=f"factor:{factor_name}",
+                symbol="*",
+                requested_start=factor_start,
+                requested_end=end_date,
+                started_at=started,
+                finished_at=finished,
+                frame=factor,
+                date_column="factor_date",
+                errors=factor_errors,
+            )
+        )
     factors_in = pd.concat(factor_frames, ignore_index=True) if factor_frames else pd.DataFrame()
+    source_runs_in = records_frame(source_records)
 
     upsert_csv(prices_path, prices_in, ["symbol", "date"])
     upsert_csv(nav_path, nav_in, ["symbol", "nav_date"])
@@ -198,10 +303,18 @@ def update_dataset(
         upsert_csv(snapshot_path, snapshot_in, ["symbol", "data_date"])
     if not factors_in.empty or factors_path.exists():
         upsert_csv(factors_path, factors_in, ["factor_name", "factor_date"])
+    upsert_csv(source_runs_path, source_runs_in, ["run_id", "resource", "symbol"])
 
     parquet_paths: list[str] = []
     if write_parquet:
-        for path in (prices_path, nav_path, pcf_path, snapshot_path, factors_path):
+        for path in (
+            prices_path,
+            nav_path,
+            pcf_path,
+            snapshot_path,
+            factors_path,
+            source_runs_path,
+        ):
             mirror = write_parquet_mirror(path)
             if mirror:
                 parquet_paths.append(str(mirror.relative_to(root)))
@@ -219,6 +332,7 @@ def update_dataset(
         "pcf": pcf_summary(pcf_path),
         "snapshot": table_summary(snapshot_path, "data_date"),
         "factor_inputs": factor_summary(factors_path),
+        "source_runs": source_run_summary(source_runs_path, run_id),
     }
     universe_symbols = [etf.symbol for etf in universe]
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
@@ -234,6 +348,7 @@ def update_dataset(
     )
 
     manifest = {
+        "run_id": run_id,
         "generated_at_utc": generated_at,
         "requested_range": {"start": start_date, "end": end_date},
         "refresh_plan": refresh_plan,
@@ -276,6 +391,7 @@ def main() -> int:
         f"pcf={manifest['tables']['pcf']['rows']} "
         f"snapshot={manifest['tables']['snapshot']['rows']} "
         f"factors={manifest['tables']['factor_inputs']['rows']} "
+        f"source_runs={manifest['tables']['source_runs']['current_run_rows']} "
         f"formal_ready={len(manifest['quality']['formal_signal_ready_symbols'])} "
         f"failures={len(manifest['failures'])}"
     )
