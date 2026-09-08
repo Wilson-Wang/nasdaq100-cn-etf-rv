@@ -41,8 +41,10 @@ jobs:
         run: python scripts/analyze_pairs.py
       - name: Update frozen OOS ledger
         run: python scripts/update_oos.py
-      - name: Validate
+      - name: Validate base dataset
         run: python scripts/validate_dataset.py
+      - name: Validate research outputs
+        run: python scripts/validate_research_outputs.py
       - name: Commit changed dataset
         run: |
           if [ -z "$(git status --porcelain -- data)" ]; then
