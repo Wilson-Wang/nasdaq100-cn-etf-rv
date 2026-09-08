@@ -1,8 +1,127 @@
 {
-  "generated_at_utc": "2026-09-08T01:28:08+00:00",
+  "run_id": "20260908T014212616092Z",
+  "generated_at_utc": "2026-09-08T01:44:40+00:00",
   "requested_range": {
     "start": "2025-06-15",
     "end": "2026-09-08"
+  },
+  "refresh_plan": {
+    "overlap_days": 14,
+    "prices": {
+      "159941": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159501": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159513": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159632": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159659": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159660": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "159696": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "513100": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "513110": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "513300": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "513390": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      },
+      "513870": {
+        "start": "2026-08-24",
+        "mode": "INCREMENTAL"
+      }
+    },
+    "nav": {
+      "159941": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159501": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159513": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159632": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159659": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159660": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "159696": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "513100": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "513110": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "513300": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "513390": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "513870": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      }
+    },
+    "factors": {
+      "NDX": {
+        "start": "2026-08-21",
+        "mode": "INCREMENTAL"
+      },
+      "FX": {
+        "start": "2025-06-15",
+        "mode": "FULL_NO_MATCHING_DATA",
+        "existing_preference": "USDCNH",
+        "source_preference": [
+          "USDCNH",
+          "USDCNY"
+        ]
+      }
+    }
   },
   "universe": [
     "159941",
@@ -319,11 +438,11 @@
           "precheck_250": true
         }
       },
-      "sha256": "d7bbce8c246502de00de671803dbfdc9214653b034e5ca704f65295303bf9382"
+      "sha256": "3eab7ab031612735f40d4fc1274c21fcf4fb3a965e40334fb2fa5dff89142436"
     },
     "pcf": {
-      "rows": 11,
-      "symbols": 11,
+      "rows": 12,
+      "symbols": 12,
       "by_symbol": {
         "159501": {
           "rows": 1,
@@ -371,6 +490,15 @@
           "source": "szse:official_pcf"
         },
         "159696": {
+          "rows": 1,
+          "min_date": "2026-09-08",
+          "max_date": "2026-09-08",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "pit_verified": true,
+          "source": "szse:official_pcf"
+        },
+        "159941": {
           "rows": 1,
           "min_date": "2026-09-08",
           "max_date": "2026-09-08",
@@ -568,10 +696,10 @@
           "precheck_250": false
         }
       },
-      "sha256": "7a91ddbb6f7737c58cd22d5829d41420abdb382f3a3dd1dcd38bcb258f169771"
+      "sha256": "656761be8284d2aaf3758fe7e9e254623a7efe84fe35eeaec73f5ba62411e57b"
     },
     "factor_inputs": {
-      "rows": 308,
+      "rows": 611,
       "factors": {
         "NDX": {
           "rows": 308,
@@ -580,27 +708,60 @@
           "sources": {
             "akshare:sina:index_us_stock_sina": 308
           }
+        },
+        "USDCNY": {
+          "rows": 303,
+          "min_date": "2025-06-16",
+          "max_date": "2026-09-08",
+          "sources": {
+            "akshare:safe:currency_boc_safe": 303
+          }
         }
       },
-      "pit_usable_rows": 308,
+      "pit_usable_rows": 611,
       "availability_method": "next_calendar_day_08_cn",
-      "availability_verified": false
+      "availability_verified": false,
+      "preferred_fx_factor": "USDCNY"
+    },
+    "source_runs": {
+      "rows": 39,
+      "current_run_rows": 39,
+      "current_run_statuses": {
+        "SUCCESS": 38,
+        "DEGRADED": 1
+      }
     }
   },
   "quality": {
     "as_of_date": "2026-09-08",
     "model_as_of_date": "2026-09-07",
-    "observed_at_utc": "2026-09-08T01:28:08+00:00",
-    "freshness_method": "weekday_phase_heuristic",
+    "information_cutoff_utc": "2026-09-08T01:44:40+00:00",
+    "observed_at_utc": "2026-09-08T01:44:40+00:00",
+    "freshness_method": "weekday_phase_heuristic_with_availability_cutoff",
     "daily_data_ready_time_cn": "15:30",
     "thresholds_business_days": {
       "price": 0,
       "nav": 2,
+      "nav_pit_usable": 2,
       "snapshot": 0,
       "pcf": 0
     },
-    "primary_market_method": "official_pcf_then_nav_status_fallback",
-    "formal_signal_ready_symbols": [],
+    "nav_pit_method": "verified_timestamp_or_conservative_available_by_bound",
+    "primary_market_method": "available_official_pcf_then_low_confidence_nav_status",
+    "formal_signal_ready_symbols": [
+      "159941",
+      "159501",
+      "159513",
+      "159632",
+      "159659",
+      "159660",
+      "159696",
+      "513100",
+      "513110",
+      "513300",
+      "513390",
+      "513870"
+    ],
     "by_symbol": {
       "159941": {
         "usable_price_observations": 302,
@@ -608,30 +769,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1300000.0,
+          "creation_limit": 0.0,
+          "redemption_limit": 0.0,
+          "net_creation_limit": 36000000.0,
+          "net_redemption_limit": 1000000000.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159501": {
         "usable_price_observations": 302,
@@ -639,30 +815,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 0.0,
+          "redemption_limit": 150000000.0,
+          "net_creation_limit": 1000000.0,
+          "net_redemption_limit": 0.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159513": {
         "usable_price_observations": 302,
@@ -670,30 +861,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 15000000.0,
+          "redemption_limit": 70000000.0,
+          "net_creation_limit": 0.0,
+          "net_redemption_limit": 0.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159632": {
         "usable_price_observations": 302,
@@ -701,30 +907,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 4000000.0,
+          "redemption_limit": 500000000.0,
+          "net_creation_limit": 0.0,
+          "net_redemption_limit": 0.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159659": {
         "usable_price_observations": 302,
@@ -732,30 +953,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 2000000.0,
+          "redemption_limit": 300000000.0,
+          "net_creation_limit": 0.0,
+          "net_redemption_limit": 0.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159660": {
         "usable_price_observations": 302,
@@ -763,30 +999,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 0.0,
+          "redemption_limit": 300000000.0,
+          "net_creation_limit": 60000000.0,
+          "net_redemption_limit": 150000000.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "159696": {
         "usable_price_observations": 302,
@@ -794,30 +1045,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "szse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 0.0,
+          "redemption_limit": 0.0,
+          "net_creation_limit": 15000000.0,
+          "net_redemption_limit": 100000000.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": null,
+          "available_at": "2026-09-08T09:15:00+08:00",
+          "availability_method": "szse_before_open_rule_conservative_09:15_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "513100": {
         "usable_price_observations": 302,
@@ -825,29 +1091,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
         "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "RESTRICTED",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "暂停申购",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "sse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 3000000.0,
+          "redemption_limit": 500000000.0,
+          "net_creation_limit": null,
+          "net_redemption_limit": null,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": 0.0,
+          "available_at": "2026-09-08T08:30:00+08:00",
+          "availability_method": "sse_official_08:30_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "CREATION_RESTRICTED_BY_NAV_STATUS"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "513110": {
         "usable_price_observations": 302,
@@ -855,30 +1137,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "sse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 1000000.0,
+          "redemption_limit": 30000000.0,
+          "net_creation_limit": null,
+          "net_redemption_limit": null,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": 0.0,
+          "available_at": "2026-09-08T08:30:00+08:00",
+          "availability_method": "sse_official_08:30_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "513300": {
         "usable_price_observations": 302,
@@ -886,30 +1183,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "sse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 750000.0,
+          "creation_limit": null,
+          "redemption_limit": null,
+          "net_creation_limit": 3750000.0,
+          "net_redemption_limit": 100000000.0,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": 0.0,
+          "available_at": "2026-09-08T08:30:00+08:00",
+          "availability_method": "sse_official_08:30_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "513390": {
         "usable_price_observations": 302,
@@ -917,30 +1229,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "sse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 1000000.0,
+          "redemption_limit": 100000000.0,
+          "net_creation_limit": null,
+          "net_redemption_limit": null,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 4.0,
+          "max_redemption_cash_discount_pct": 0.0,
+          "available_at": "2026-09-08T08:30:00+08:00",
+          "availability_method": "sse_official_08:30_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       },
       "513870": {
         "usable_price_observations": 302,
@@ -948,30 +1275,45 @@
         "price_lag_business_days": 0,
         "nav_last_date": "2026-09-04",
         "nav_lag_business_days": 1,
+        "raw_nav_last_date": "2026-09-04",
+        "raw_nav_lag_business_days": 1,
+        "pit_nav_last_date": "2026-09-04",
+        "pit_nav_lag_business_days": 1,
         "snapshot_last_date": "2026-09-07",
         "snapshot_lag_business_days": 0,
-        "pcf_last_date": null,
-        "pcf_lag_business_days": null,
-        "pcf_current_verified": false,
+        "pcf_last_observed_date": "2026-09-08",
+        "pcf_last_available_date": "2026-09-08",
+        "pcf_lag_business_days": 0,
+        "pcf_current_verified": true,
+        "pit_usable": true,
         "pit_verified": false,
-        "source_degraded": true,
+        "source_degraded": false,
         "critical_source_failure": false,
         "primary_market": {
-          "source": "nav_status_fallback",
-          "as_of_date": "2026-09-04",
-          "creation_state": "UNKNOWN",
-          "redemption_state": "UNKNOWN",
-          "subscription_status_raw": "场内买入",
-          "redemption_status_raw": "场内卖出",
-          "confidence": "LOW"
+          "source": "official_pcf",
+          "source_detail": "sse:official_pcf",
+          "as_of_date": "2026-09-08",
+          "creation_state": "OPEN",
+          "redemption_state": "OPEN",
+          "creation_allowed": true,
+          "redemption_allowed": true,
+          "creation_unit": 1000000.0,
+          "creation_limit": 1000000.0,
+          "redemption_limit": 15000000.0,
+          "net_creation_limit": null,
+          "net_redemption_limit": null,
+          "cash_substitution_limit_pct": 100.0,
+          "max_creation_cash_premium_pct": 10.0,
+          "max_redemption_cash_discount_pct": 0.0,
+          "available_at": "2026-09-08T08:30:00+08:00",
+          "availability_method": "sse_official_08:30_cn",
+          "confidence": "HIGH"
         },
         "states": [
           "PIT_UNVERIFIED",
-          "PCF_MISSING",
-          "SOURCE_DEGRADED",
-          "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE"
+          "PIT_CONSERVATIVE"
         ],
-        "formal_signal_ready": false
+        "formal_signal_ready": true
       }
     }
   },
@@ -980,25 +1322,15 @@
     "data/etf_nav.parquet",
     "data/etf_pcf.parquet",
     "data/etf_snapshot.parquet",
-    "data/factor_inputs.parquet"
+    "data/factor_inputs.parquet",
+    "data/source_runs.parquet"
   ],
   "warnings": [
     "no PIT-verified NAV observations: 159501=0, 159513=0, 159632=0, 159659=0, 159660=0, 159696=0, 159941=0, 513100=0, 513110=0, 513300=0, 513390=0, 513870=0",
     "snapshot missing usable bid/ask: 159501, 159696, 159941, 513100",
-    "factor input missing: USDCNH"
+    "USDCNH unavailable; Model Fair Value must use USDCNY fallback consistently"
   ],
   "failures": [
-    "159941 PCF official: ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))",
-    "159501 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "159513 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "159632 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "159659 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "159660 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "159696 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513110 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513300 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513390 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "513870 prices akshare:eastmoney: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
     "factor USDCNH akshare:eastmoney:forex_hist_em: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
   ]
 }
