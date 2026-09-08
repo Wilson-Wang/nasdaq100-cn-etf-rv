@@ -17,7 +17,10 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
     if not pair_path.exists() or pair_path.stat().st_size == 0:
         errors.append("pair_analysis.csv missing or empty")
         return errors
-    pairs = pd.read_csv(pair_path, dtype={"pair": "string", "symbol_i": "string", "symbol_j": "string"})
+    pairs = pd.read_csv(
+        pair_path,
+        dtype={"pair": "string", "symbol_i": "string", "symbol_j": "string"},
+    )
     if pairs["pair"].duplicated().any():
         errors.append("pair_analysis contains duplicate pair rows")
     if len(pairs) > 66:
@@ -31,7 +34,8 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
         ready = manifest.get("quality", {}).get("formal_signal_ready_symbols", [])
         if len(ready) == len(universe) and len(pairs) != expected_pairs:
             errors.append(
-                f"all symbols model-ready but pair_analysis has {len(pairs)} rows, expected {expected_pairs}"
+                f"all symbols model-ready but pair_analysis has {len(pairs)} rows, "
+                f"expected {expected_pairs}"
             )
 
     score = pd.to_numeric(pairs.get("pair_score"), errors="coerce")
@@ -49,9 +53,13 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
         prices = pd.read_csv(prices_path, dtype={"symbol": "string"})
         prices["date"] = pd.to_datetime(prices["date"], errors="coerce")
         if "is_tradable" in prices.columns:
-            tradable = prices["is_tradable"].astype("string").str.lower().map(
-                {"true": True, "1": True, "false": False, "0": False}
-            ).fillna(False)
+            tradable = (
+                prices["is_tradable"]
+                .astype("string")
+                .str.lower()
+                .map({"true": True, "1": True, "false": False, "0": False})
+                .fillna(False)
+            )
             prices = prices.loc[tradable].copy()
         unique_dates = prices.groupby("symbol")["date"].nunique().to_dict()
         for _, row in pairs.iterrows():
@@ -59,10 +67,13 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
                 int(unique_dates.get(str(row["symbol_i"]), 0)),
                 int(unique_dates.get(str(row["symbol_j"]), 0)),
             )
-            aligned = pd.to_numeric(pd.Series([row.get("aligned_observations")]), errors="coerce").iloc[0]
+            aligned = pd.to_numeric(
+                pd.Series([row.get("aligned_observations")]), errors="coerce"
+            ).iloc[0]
             if pd.notna(aligned) and int(aligned) > upper:
                 errors.append(
-                    f"pair {row['pair']} aligned observations {int(aligned)} exceed price-date upper bound {upper}"
+                    f"pair {row['pair']} aligned observations {int(aligned)} "
+                    f"exceed price-date upper bound {upper}"
                 )
 
     if "gates" in pairs.columns:
@@ -75,7 +86,8 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
             failed = [name for name, passed in gates.items() if passed is not True]
             if failed:
                 errors.append(
-                    f"formal pair {row['pair']} has failed gates: {','.join(sorted(failed))}"
+                    f"formal pair {row['pair']} has failed gates: "
+                    f"{','.join(sorted(failed))}"
                 )
 
     liquidity_path = data / "liquidity_scores.csv"
@@ -103,24 +115,46 @@ def validate_research_outputs(data_dir: str | Path) -> list[str]:
         "portfolio_status.json",
         "research_health.json",
         "execution_cost_model.json",
+        "history_depth.json",
+        "regime_history_coverage.json",
         "daily_report.md",
         "report_state.json",
     ):
         if not (data / required).exists():
             errors.append(f"{required} missing")
 
+    history_path = data / "history_depth.json"
+    if history_path.exists():
+        history = json.loads(history_path.read_text())
+        by_symbol = history.get("by_symbol", {})
+        for symbol in universe:
+            if symbol not in by_symbol:
+                errors.append(f"history_depth missing symbol {symbol}")
+            elif int(by_symbol[symbol].get("aligned_upper_bound", 0)) < 120:
+                errors.append(f"history_depth below formal 120 minimum for {symbol}")
+
+    regime_coverage_path = data / "regime_history_coverage.json"
+    if regime_coverage_path.exists():
+        coverage = json.loads(regime_coverage_path.read_text())
+        if not coverage.get("historical_backtest_policy"):
+            errors.append("regime history coverage missing historical backtest policy")
+
     portfolio_path = data / "portfolio_plan.csv"
     if not portfolio_path.exists():
         errors.append("portfolio_plan.csv missing")
     elif portfolio_path.stat().st_size:
-        portfolio = pd.read_csv(portfolio_path, dtype={"rotate_in": "string", "rotate_out": "string"})
+        portfolio = pd.read_csv(
+            portfolio_path, dtype={"rotate_in": "string", "rotate_out": "string"}
+        )
         if not portfolio.empty:
             if not portfolio["signal"].isin(FORMAL_SIGNALS).all():
                 errors.append("portfolio plan contains non-formal pair signals")
             weight = pd.to_numeric(portfolio["allocation_weight"], errors="coerce")
             if weight.gt(0.4000001).any():
                 errors.append("portfolio pair allocation exceeds 40% cap")
-            legs = pd.concat([portfolio["rotate_in"], portfolio["rotate_out"]], ignore_index=True)
+            legs = pd.concat(
+                [portfolio["rotate_in"], portfolio["rotate_out"]], ignore_index=True
+            )
             if legs.duplicated().any():
                 errors.append("portfolio plan contains shared ETF across selected pairs")
             if weight.sum() > 1.0000001:
