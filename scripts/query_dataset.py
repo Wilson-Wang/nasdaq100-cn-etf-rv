@@ -11,13 +11,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Query local ETF dataset with DuckDB")
-    parser.add_argument("sql", help="SQL to execute; views: prices, nav, snapshot, factors")
+    parser.add_argument(
+        "sql",
+        help="SQL to execute; views: prices, nav, pcf, snapshot, factors",
+    )
     args = parser.parse_args()
 
     con = duckdb.connect(database=":memory:")
     for view, filename in {
         "prices": "etf_prices.parquet",
         "nav": "etf_nav.parquet",
+        "pcf": "etf_pcf.parquet",
         "snapshot": "etf_snapshot.parquet",
         "factors": "factor_inputs.parquet",
     }.items():

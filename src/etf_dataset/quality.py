@@ -10,11 +10,14 @@ import pandas as pd
 PRICE_FRESH_BDAYS = 0
 NAV_FRESH_BDAYS = 2
 SNAPSHOT_FRESH_BDAYS = 0
+PCF_FRESH_BDAYS = 0
 CHINA_TZ = ZoneInfo("Asia/Shanghai")
 DAILY_DATA_READY_TIME_CN = time(15, 30)
 
 
-def _read(path: str | Path) -> pd.DataFrame:
+def _read(path: str | Path | None) -> pd.DataFrame:
+    if path is None:
+        return pd.DataFrame()
     path = Path(path)
     if not path.exists() or path.stat().st_size == 0:
         return pd.DataFrame()
@@ -30,6 +33,19 @@ def _normalize_bool(series: pd.Series) -> pd.Series:
         .fillna(False)
         .astype(bool)
     )
+
+
+def _scalar_bool(value: object) -> bool | None:
+    if value is None or pd.isna(value):
+        return None
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in {"true", "1", "yes", "y"}:
+        return True
+    if normalized in {"false", "0", "no", "n"}:
+        return False
+    return None
 
 
 def _previous_weekday(value: str) -> str:
@@ -125,12 +141,7 @@ def _source_degraded(symbol: str, failures: list[str]) -> bool:
 
 
 def _restriction_state(value: object, restriction_terms: tuple[str, ...]) -> str:
-    """Return RESTRICTED only for explicit restriction language.
-
-    ETF NAV pages may use labels such as '场内买入/场内卖出'. Those labels are
-    secondary-market descriptions and must not be promoted to OPEN primary-market
-    creation/redemption states. Unknown/ambiguous text therefore remains UNKNOWN.
-    """
+    """Return RESTRICTED only for explicit restriction language."""
     if value is None or pd.isna(value):
         return "UNKNOWN"
     text = str(value).strip()
@@ -176,6 +187,45 @@ def _nav_primary_market_fallback(group: pd.DataFrame) -> dict:
     }
 
 
+def _pcf_primary_market(group: pd.DataFrame) -> dict | None:
+    row = _latest_row(group, "date")
+    if row is None:
+        return None
+    if not bool(_scalar_bool(row.get("pit_verified"))):
+        return None
+
+    creation_allowed = _scalar_bool(row.get("creation_allowed"))
+    redemption_allowed = _scalar_bool(row.get("redemption_allowed"))
+
+    def state(value: bool | None) -> str:
+        if value is True:
+            return "OPEN"
+        if value is False:
+            return "RESTRICTED"
+        return "UNKNOWN"
+
+    return {
+        "source": "official_pcf",
+        "source_detail": None if pd.isna(row.get("source")) else str(row.get("source")),
+        "as_of_date": None if pd.isna(row.get("date")) else str(row.get("date")),
+        "creation_state": state(creation_allowed),
+        "redemption_state": state(redemption_allowed),
+        "creation_allowed": creation_allowed,
+        "redemption_allowed": redemption_allowed,
+        "creation_unit": row.get("creation_unit"),
+        "creation_limit": row.get("creation_limit"),
+        "redemption_limit": row.get("redemption_limit"),
+        "net_creation_limit": row.get("net_creation_limit"),
+        "net_redemption_limit": row.get("net_redemption_limit"),
+        "cash_substitution_limit_pct": row.get("cash_substitution_limit_pct"),
+        "max_creation_cash_premium_pct": row.get("max_creation_cash_premium_pct"),
+        "max_redemption_cash_discount_pct": row.get("max_redemption_cash_discount_pct"),
+        "available_at": row.get("available_at"),
+        "availability_method": row.get("availability_method"),
+        "confidence": "HIGH",
+    }
+
+
 def build_quality_report(
     prices_path: str | Path,
     nav_path: str | Path,
@@ -184,26 +234,20 @@ def build_quality_report(
     as_of_date: str,
     failures: list[str],
     observed_at_utc: str | None = None,
+    pcf_path: str | Path | None = None,
 ) -> dict:
     """Build signal-readiness separately from structural file validation.
 
-    Freshness uses the latest *completed* weekday trading date as a deterministic
-    precheck. It remains a heuristic until an exchange holiday calendar is wired
-    in. Data dated after the effective market date is excluded from readiness
-    calculations so a historical/pre-close check cannot accidentally use future
-    rows already present in the local dataset.
-
-    A source failure is recorded as degraded, but becomes critical only when the
-    resulting current input is stale or absent.
-
-    Primary-market states are currently a low-confidence fallback from NAV-page
-    status text. Only explicit restriction language is promoted to RESTRICTED;
-    apparent secondary-market labels are never interpreted as proof of OPEN.
-    A future point-in-time PCF table should supersede this fallback.
+    Official point-in-time PCF is preferred for primary-market regime. If no
+    PIT-usable PCF exists for the effective model date, the quality report falls
+    back to deliberately low-confidence NAV-page status text. A source failure
+    is recorded as degraded, but becomes critical only when core price/NAV/
+    snapshot inputs are stale or absent.
     """
     prices = _read(prices_path)
     nav = _read(nav_path)
     snapshot = _read(snapshot_path)
+    pcf = _read(pcf_path)
     model_as_of_date = _effective_market_date(as_of_date, observed_at_utc)
 
     global_snapshot_failure = any(message.startswith("snapshot ") for message in failures)
@@ -225,22 +269,36 @@ def build_quality_report(
             if "symbol" in snapshot.columns
             else pd.DataFrame()
         )
+        pcf_group_all = (
+            pcf[pcf["symbol"] == symbol]
+            if "symbol" in pcf.columns
+            else pd.DataFrame()
+        )
 
         price_group = _on_or_before(price_group_all, "date", model_as_of_date)
         nav_group = _on_or_before(nav_group_all, "nav_date", model_as_of_date)
         snapshot_group = _on_or_before(snapshot_group_all, "data_date", model_as_of_date)
+        pcf_group = _on_or_before(pcf_group_all, "date", model_as_of_date)
 
         price_last = _latest_date(price_group, "date")
         nav_last = _latest_date(nav_group, "nav_date")
         snapshot_last = _latest_date(snapshot_group, "data_date")
+        pcf_last = _latest_date(pcf_group, "date")
 
         price_lag = _business_day_lag(price_last, model_as_of_date)
         nav_lag = _business_day_lag(nav_last, model_as_of_date)
         snapshot_lag = _business_day_lag(snapshot_last, model_as_of_date)
+        pcf_lag = _business_day_lag(pcf_last, model_as_of_date)
         usable_prices = _usable_price_count(price_group)
         pit_verified = _latest_pit_verified(nav_group)
         source_degraded = _source_degraded(symbol, failures) or global_snapshot_failure
-        primary_market = _nav_primary_market_fallback(nav_group)
+
+        current_pcf = (
+            _pcf_primary_market(pcf_group)
+            if pcf_lag is not None and pcf_lag <= PCF_FRESH_BDAYS
+            else None
+        )
+        primary_market = current_pcf or _nav_primary_market_fallback(nav_group)
 
         stale_price = price_lag is None or price_lag > PRICE_FRESH_BDAYS
         stale_nav = nav_lag is None or nav_lag > NAV_FRESH_BDAYS
@@ -263,19 +321,30 @@ def build_quality_report(
             states.append("STALE_SNAPSHOT")
         if not pit_verified:
             states.append("PIT_UNVERIFIED")
+        if pcf_lag is None:
+            states.append("PCF_MISSING")
+        elif pcf_lag > PCF_FRESH_BDAYS:
+            states.append("STALE_PCF")
         if source_degraded:
             states.append("SOURCE_DEGRADED")
         if critical_source_failure:
             states.append("CRITICAL_SOURCE_FAILURE")
-        if primary_market["creation_state"] == "RESTRICTED":
-            states.append("CREATION_RESTRICTED_BY_NAV_STATUS")
-        if primary_market["redemption_state"] == "RESTRICTED":
-            states.append("REDEMPTION_RESTRICTED_BY_NAV_STATUS")
-        if (
-            primary_market["creation_state"] == "UNKNOWN"
-            and primary_market["redemption_state"] == "UNKNOWN"
-        ):
-            states.append("PRIMARY_MARKET_STATUS_LOW_CONFIDENCE")
+
+        if current_pcf is not None:
+            if primary_market["creation_state"] == "RESTRICTED":
+                states.append("CREATION_RESTRICTED_BY_PCF")
+            if primary_market["redemption_state"] == "RESTRICTED":
+                states.append("REDEMPTION_RESTRICTED_BY_PCF")
+        else:
+            if primary_market["creation_state"] == "RESTRICTED":
+                states.append("CREATION_RESTRICTED_BY_NAV_STATUS")
+            if primary_market["redemption_state"] == "RESTRICTED":
+                states.append("REDEMPTION_RESTRICTED_BY_NAV_STATUS")
+            if (
+                primary_market["creation_state"] == "UNKNOWN"
+                and primary_market["redemption_state"] == "UNKNOWN"
+            ):
+                states.append("PRIMARY_MARKET_STATUS_LOW_CONFIDENCE")
 
         formal_signal_ready = (
             usable_prices >= 120
@@ -294,6 +363,9 @@ def build_quality_report(
             "nav_lag_business_days": nav_lag,
             "snapshot_last_date": snapshot_last,
             "snapshot_lag_business_days": snapshot_lag,
+            "pcf_last_date": pcf_last,
+            "pcf_lag_business_days": pcf_lag,
+            "pcf_current_verified": current_pcf is not None,
             "pit_verified": pit_verified,
             "source_degraded": source_degraded,
             "critical_source_failure": critical_source_failure,
@@ -312,8 +384,9 @@ def build_quality_report(
             "price": PRICE_FRESH_BDAYS,
             "nav": NAV_FRESH_BDAYS,
             "snapshot": SNAPSHOT_FRESH_BDAYS,
+            "pcf": PCF_FRESH_BDAYS,
         },
-        "primary_market_method": "low_confidence_nav_status_fallback_until_pcf",
+        "primary_market_method": "official_pcf_then_nav_status_fallback",
         "formal_signal_ready_symbols": [
             symbol for symbol, item in by_symbol.items() if item["formal_signal_ready"]
         ],

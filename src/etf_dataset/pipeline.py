@@ -13,6 +13,7 @@ from .factors import (
     fetch_usdcnh_em,
     validate_factor_inputs,
 )
+from .pcf import fetch_official_pcf, pcf_summary, validate_pcf
 from .quality import build_quality_report
 from .snapshot import add_snapshot_derived_fields
 from .sources import (
@@ -61,6 +62,7 @@ def update_dataset(
 
     price_frames: list[pd.DataFrame] = []
     nav_frames: list[pd.DataFrame] = []
+    pcf_frames: list[pd.DataFrame] = []
 
     for index, etf in enumerate(universe, start=1):
         print(f"[{index}/{len(universe)}] {etf.symbol} prices", flush=True)
@@ -85,8 +87,19 @@ def update_dataset(
         except Exception as exc:
             failures.append(f"{etf.symbol} NAV akshare:eastmoney: {type(exc).__name__}: {exc}")
 
+        print(f"[{index}/{len(universe)}] {etf.symbol} official PCF", flush=True)
+        try:
+            pcf = run_with_timeout(fetch_official_pcf, etf, end_date, seconds=30)
+            if pcf.empty:
+                failures.append(f"{etf.symbol} PCF official: empty result")
+            else:
+                pcf_frames.append(pcf)
+        except Exception as exc:
+            failures.append(f"{etf.symbol} PCF official: {type(exc).__name__}: {exc}")
+
     prices_in = pd.concat(price_frames, ignore_index=True) if price_frames else pd.DataFrame()
     nav_in = pd.concat(nav_frames, ignore_index=True) if nav_frames else pd.DataFrame()
+    pcf_in = pd.concat(pcf_frames, ignore_index=True) if pcf_frames else pd.DataFrame()
 
     symbols = {etf.symbol for etf in universe}
     print("fetching latest ETF snapshot", flush=True)
@@ -119,11 +132,14 @@ def update_dataset(
 
     prices_path = data_dir / "etf_prices.csv"
     nav_path = data_dir / "etf_nav.csv"
+    pcf_path = data_dir / "etf_pcf.csv"
     snapshot_path = data_dir / "etf_snapshot.csv"
     factors_path = data_dir / "factor_inputs.csv"
 
     upsert_csv(prices_path, prices_in, ["symbol", "date"])
     upsert_csv(nav_path, nav_in, ["symbol", "nav_date"])
+    if not pcf_in.empty or pcf_path.exists():
+        upsert_csv(pcf_path, pcf_in, ["symbol", "date"])
     if not snapshot_in.empty or snapshot_path.exists():
         upsert_csv(snapshot_path, snapshot_in, ["symbol", "data_date"])
     if not factors_in.empty or factors_path.exists():
@@ -131,7 +147,7 @@ def update_dataset(
 
     parquet_paths: list[str] = []
     if write_parquet:
-        for path in (prices_path, nav_path, snapshot_path, factors_path):
+        for path in (prices_path, nav_path, pcf_path, snapshot_path, factors_path):
             mirror = write_parquet_mirror(path)
             if mirror:
                 parquet_paths.append(str(mirror.relative_to(root)))
@@ -139,12 +155,14 @@ def update_dataset(
     warnings: list[str] = []
     warnings.extend(validate_prices(prices_path))
     warnings.extend(validate_nav(nav_path))
+    warnings.extend(validate_pcf(pcf_path))
     warnings.extend(validate_snapshot(snapshot_path))
     warnings.extend(validate_factor_inputs(factors_path))
 
     tables = {
         "prices": table_summary(prices_path, "date"),
         "nav": table_summary(nav_path, "nav_date"),
+        "pcf": pcf_summary(pcf_path),
         "snapshot": table_summary(snapshot_path, "data_date"),
         "factor_inputs": factor_summary(factors_path),
     }
@@ -158,6 +176,7 @@ def update_dataset(
         as_of_date=end_date,
         failures=failures,
         observed_at_utc=generated_at,
+        pcf_path=pcf_path,
     )
 
     manifest = {
@@ -199,6 +218,7 @@ def main() -> int:
     print(
         f"updated prices={manifest['tables']['prices']['rows']} "
         f"nav={manifest['tables']['nav']['rows']} "
+        f"pcf={manifest['tables']['pcf']['rows']} "
         f"snapshot={manifest['tables']['snapshot']['rows']} "
         f"factors={manifest['tables']['factor_inputs']['rows']} "
         f"formal_ready={len(manifest['quality']['formal_signal_ready_symbols'])} "
