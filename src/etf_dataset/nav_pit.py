@@ -7,6 +7,8 @@ import pandas as pd
 
 
 QDII_NAV_AVAILABILITY_METHOD = "qdii_regulatory_tplus2_exchange_workdays_eod"
+FIRST_SEEN_METHOD = "first_seen_ingestion_bound"
+COMBINED_AVAILABILITY_METHOD = "earliest_safe_bound:first_seen_or_qdii_tplus2"
 PENDING_AVAILABILITY_METHOD = "pending_qdii_tplus2_exchange_workdays"
 
 
@@ -14,13 +16,7 @@ def observed_exchange_days(
     prices_path: str | Path,
     extra_prices: pd.DataFrame | None = None,
 ) -> list[pd.Timestamp]:
-    """Build an observed mainland exchange-session calendar from ETF prices.
-
-    The universe's QDII contracts define workdays by mainland exchange normal
-    trading days. Using observed ETF price dates avoids pretending that generic
-    weekdays are exact exchange holidays. The union is used so one ETF's
-    suspension cannot remove a genuine exchange session.
-    """
+    """Build an observed mainland exchange-session calendar from ETF prices."""
     frames: list[pd.DataFrame] = []
     path = Path(prices_path)
     if path.exists() and path.stat().st_size:
@@ -40,7 +36,7 @@ def observed_exchange_days(
 def _regulatory_available_at(
     nav_date: object,
     exchange_days: list[pd.Timestamp],
-) -> str | None:
+) -> pd.Timestamp | None:
     value = pd.to_datetime(nav_date, errors="coerce")
     if pd.isna(value):
         return None
@@ -50,11 +46,37 @@ def _regulatory_available_at(
     if second_following_index >= len(exchange_days):
         return None
     deadline_day = exchange_days[second_following_index]
-    return (
-        deadline_day.tz_localize("Asia/Shanghai")
-        .replace(hour=23, minute=59, second=59)
-        .isoformat()
-    )
+    return deadline_day.tz_localize("Asia/Shanghai").replace(hour=23, minute=59, second=59)
+
+
+def _first_seen_available_at(row: pd.Series) -> pd.Timestamp | None:
+    value = pd.to_datetime(row.get("ingested_at_utc"), errors="coerce", utc=True)
+    if pd.isna(value):
+        return None
+    nav_date = pd.to_datetime(row.get("nav_date"), errors="coerce")
+    if pd.isna(nav_date):
+        return None
+    # A successful fetch proves only that the value was available by fetch time.
+    # It remains an upper bound, not an exact publication timestamp.
+    return pd.Timestamp(value).tz_convert("Asia/Shanghai")
+
+
+def _safe_availability_bound(
+    row: pd.Series,
+    exchange_days: list[pd.Timestamp],
+) -> tuple[pd.Timestamp | None, str]:
+    regulatory = _regulatory_available_at(row.get("nav_date"), exchange_days)
+    first_seen = _first_seen_available_at(row)
+    candidates = [value for value in (regulatory, first_seen) if value is not None]
+    if not candidates:
+        return None, PENDING_AVAILABILITY_METHOD
+
+    chosen = min(candidates)
+    if regulatory is not None and first_seen is not None:
+        return chosen, COMBINED_AVAILABILITY_METHOD
+    if first_seen is not None:
+        return chosen, FIRST_SEEN_METHOD
+    return chosen, QDII_NAV_AVAILABILITY_METHOD
 
 
 def enrich_nav_pit(
@@ -63,11 +85,11 @@ def enrich_nav_pit(
 ) -> pd.DataFrame:
     """Attach a conservative, non-fabricated availability bound to NAV rows.
 
-    Exact historical publication timestamps remain unverified. For rows without
-    verified source timing, the QDII regulatory deadline is used only as an
-    `available_by` bound: after the second observed mainland exchange workday,
-    at 23:59:59 China time. This supports no-lookahead research while preserving
-    `pit_verified=false` and `availability_verified=false`.
+    Exact historical publication timestamps remain unverified. A row becomes
+    point-in-time usable once either (a) the dataset actually observed it, or
+    (b) the QDII regulatory T+2 exchange-workday disclosure deadline is known.
+    The earlier of those two safe upper bounds is recorded. `pit_verified`
+    remains false unless a future source supplies an exact publication time.
     """
     if nav.empty:
         return nav.copy()
@@ -95,17 +117,17 @@ def enrich_nav_pit(
     )
 
     for index, row in result.loc[~verified].iterrows():
-        available_at = _regulatory_available_at(row.get("nav_date"), exchange_days)
+        available_at, method = _safe_availability_bound(row, exchange_days)
         if available_at is None:
             result.at[index, "available_at"] = pd.NA
-            result.at[index, "availability_source"] = PENDING_AVAILABILITY_METHOD
+            result.at[index, "availability_source"] = method
             result.at[index, "availability_verified"] = False
             result.at[index, "pit_verified"] = False
             result.at[index, "pit_usable"] = False
             continue
 
-        result.at[index, "available_at"] = available_at
-        result.at[index, "availability_source"] = QDII_NAV_AVAILABILITY_METHOD
+        result.at[index, "available_at"] = available_at.isoformat()
+        result.at[index, "availability_source"] = method
         result.at[index, "availability_verified"] = False
         result.at[index, "pit_verified"] = False
         result.at[index, "pit_usable"] = True
