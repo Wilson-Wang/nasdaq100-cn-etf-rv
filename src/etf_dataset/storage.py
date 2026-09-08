@@ -13,6 +13,64 @@ def _read_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path, dtype={"symbol": "string"})
 
 
+def _values_equal(left: object, right: object) -> bool:
+    if pd.isna(left) and pd.isna(right):
+        return True
+    try:
+        return bool(left == right)
+    except (TypeError, ValueError):
+        return False
+
+
+def _drop_unchanged_incoming(
+    existing: pd.DataFrame,
+    incoming: pd.DataFrame,
+    key_columns: list[str],
+) -> pd.DataFrame:
+    """Drop refresh rows whose stored business values are already identical.
+
+    `ingested_at_utc` is provenance for the observation that won the upsert. A
+    repeated download of the exact same row should not replace it solely because
+    the new fetch happened later; doing so creates large meaningless Git diffs.
+    A changed value at the same source priority still replaces the stored row.
+    """
+    if existing.empty or incoming.empty:
+        return incoming
+
+    left = existing.copy()
+    right = incoming.copy()
+    for key in key_columns:
+        if key in left.columns:
+            left[key] = left[key].astype("string")
+        if key in right.columns:
+            right[key] = right[key].astype("string")
+
+    left = left.drop_duplicates(key_columns, keep="first").set_index(key_columns, drop=False)
+    compare_columns = sorted((set(left.columns) | set(right.columns)) - {"ingested_at_utc"})
+    keep_indices: list[object] = []
+
+    for index, row in right.iterrows():
+        key = tuple(row.get(column) for column in key_columns)
+        lookup_key: object = key[0] if len(key) == 1 else key
+        if lookup_key not in left.index:
+            keep_indices.append(index)
+            continue
+
+        stored = left.loc[lookup_key]
+        if isinstance(stored, pd.DataFrame):
+            stored = stored.iloc[0]
+
+        same = True
+        for column in compare_columns:
+            if not _values_equal(stored.get(column, pd.NA), row.get(column, pd.NA)):
+                same = False
+                break
+        if not same:
+            keep_indices.append(index)
+
+    return right.loc[keep_indices].copy()
+
+
 def upsert_csv(path: str | Path, incoming: pd.DataFrame, key_columns: list[str]) -> pd.DataFrame:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -23,11 +81,17 @@ def upsert_csv(path: str | Path, incoming: pd.DataFrame, key_columns: list[str])
     if incoming.empty:
         return existing
 
+    incoming = _drop_unchanged_incoming(existing, incoming, key_columns)
+    if incoming.empty:
+        return existing
+
     combined = pd.concat([existing, incoming], ignore_index=True, sort=False)
     for key in key_columns:
         combined[key] = combined[key].astype("string")
 
-    combined["source_priority"] = pd.to_numeric(combined["source_priority"], errors="coerce").fillna(9999)
+    combined["source_priority"] = pd.to_numeric(
+        combined["source_priority"], errors="coerce"
+    ).fillna(9999)
     combined["_ingested_sort"] = pd.to_datetime(
         combined["ingested_at_utc"], errors="coerce", utc=True
     )
@@ -132,4 +196,7 @@ def table_summary(path: str | Path, date_column: str) -> dict:
 
 
 def write_manifest(path: str | Path, payload: dict) -> None:
-    Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path(path).write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
