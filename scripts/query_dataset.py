@@ -13,7 +13,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Query local ETF dataset with DuckDB")
     parser.add_argument(
         "sql",
-        help="SQL to execute; views: prices, nav, pcf, snapshot, factors",
+        help="SQL to execute; views: prices, nav, pcf, snapshot, factors, source_runs",
     )
     args = parser.parse_args()
 
@@ -24,6 +24,7 @@ def main() -> int:
         "pcf": "etf_pcf.parquet",
         "snapshot": "etf_snapshot.parquet",
         "factors": "factor_inputs.parquet",
+        "source_runs": "source_runs.parquet",
     }.items():
         path = ROOT / "data" / filename
         if path.exists():
