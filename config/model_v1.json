@@ -1,0 +1,28 @@
+{
+  "model_version": "pair-engine-v1.0.0",
+  "created_date": "2026-09-08",
+  "training_end_date": "2026-09-08",
+  "oos_start_date": "2026-09-09",
+  "signal_timing": "EOD",
+  "entry_timing": "next_tradable_session_open",
+  "exit_timing": "fifth_tradable_session_close_from_signal_plus_5_index",
+  "parameters": {
+    "z_window": 60,
+    "ar_window": 120,
+    "horizon": 5,
+    "entry_z": 2.0,
+    "reset_z": 1.0,
+    "min_scale": 0.0001,
+    "max_half_life": 12.0,
+    "min_net_expected_convergence": 0.008,
+    "min_adjusted_win_rate": 0.65,
+    "assumed_rotation_cost": 0.0015,
+    "min_formal_observations": 120,
+    "preferred_observations": 250
+  },
+  "notes": [
+    "Historical NAV availability may be conservative PIT rather than source-timestamp verified.",
+    "USDCNY may substitute for USDCNH only when explicitly recorded in manifest.",
+    "Formal EOD execution requires next-session eligibility and a fresh live-book check at actual entry."
+  ]
+}

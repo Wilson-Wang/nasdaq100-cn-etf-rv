@@ -48,12 +48,13 @@ def build_execution_readiness(
     symbols: list[str],
     as_of_date: str,
 ) -> dict:
-    """Separate model-data readiness from execution-input readiness.
+    """Separate intraday executable quotes from next-session EOD eligibility.
 
-    A model can remain research-ready without a usable current order book. Formal
-    trade signals should additionally require `execution_ready=true`; otherwise
-    the result is observation/WATCH only. Missing quotes are never backfilled
-    from an older day merely to make a signal executable.
+    `execution_ready` requires a live same-day best book and is intended for an
+    intraday decision. `next_session_eligible` only requires a same-day valid
+    last price plus actual trading activity; it is the appropriate precheck for
+    an EOD signal whose earliest fill is the next tradable session. The next-day
+    order must still re-check a live bid/ask before execution.
     """
     snapshot = _read(snapshot_path)
     by_symbol: dict[str, dict] = {}
@@ -68,6 +69,7 @@ def build_execution_readiness(
                 "has_activity": False,
                 "has_valid_book": False,
                 "execution_ready": False,
+                "next_session_eligible": False,
                 "states": ["NO_SNAPSHOT"],
             }
             continue
@@ -91,11 +93,12 @@ def build_execution_readiness(
         if not has_valid_book:
             states.append("NO_ACTIVE_BOOK")
 
-        execution_ready = bool(
-            is_current_date and has_last and has_activity and has_valid_book
-        )
+        execution_ready = bool(is_current_date and has_last and has_activity and has_valid_book)
+        next_session_eligible = bool(is_current_date and has_last and has_activity)
         if execution_ready:
             states.append("EXECUTION_READY")
+        if next_session_eligible:
+            states.append("NEXT_SESSION_ELIGIBLE")
 
         by_symbol[symbol] = {
             "snapshot_date": snapshot_date,
@@ -109,20 +112,27 @@ def build_execution_readiness(
             "has_activity": has_activity,
             "has_valid_book": has_valid_book,
             "execution_ready": execution_ready,
+            "next_session_eligible": next_session_eligible,
             "states": states,
         }
 
     ready = [symbol for symbol, item in by_symbol.items() if item["execution_ready"]]
-    blocked = [symbol for symbol in symbols if symbol not in ready]
+    intraday_blocked = [symbol for symbol in symbols if symbol not in ready]
+    next_session = [
+        symbol for symbol, item in by_symbol.items() if item["next_session_eligible"]
+    ]
+    next_session_blocked = [symbol for symbol in symbols if symbol not in next_session]
     return {
         "as_of_date": as_of_date,
-        "method": "current_day_last_activity_and_bid_ask",
+        "method": "current_day_activity_with_separate_live_book_gate",
         "policy": (
-            "formal trade signals require execution readiness in addition to model readiness; "
-            "blocked symbols remain eligible for research/WATCH outputs"
+            "intraday execution requires a live best book; EOD t+1 signals use "
+            "next-session eligibility and must re-check a live book at entry"
         ),
         "execution_ready_symbols": ready,
-        "execution_blocked_symbols": blocked,
+        "execution_blocked_symbols": intraday_blocked,
+        "next_session_eligible_symbols": next_session,
+        "next_session_blocked_symbols": next_session_blocked,
         "by_symbol": by_symbol,
     }
 
