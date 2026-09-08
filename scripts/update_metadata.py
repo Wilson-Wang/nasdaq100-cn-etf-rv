@@ -26,21 +26,24 @@ def _metadata_for_scoring(metadata: pd.DataFrame, nav: pd.DataFrame) -> pd.DataF
         return enriched
 
     n = nav.copy()
+    n["symbol"] = n["symbol"].astype("string")
     n["nav_date"] = pd.to_datetime(n["nav_date"], errors="coerce")
     n["unit_nav"] = pd.to_numeric(n["unit_nav"], errors="coerce")
-    latest_nav = (
-        n.dropna(subset=["nav_date", "unit_nav"])
+    latest_nav_frame = (
+        n.dropna(subset=["symbol", "nav_date", "unit_nav"])
         .sort_values("nav_date")
         .drop_duplicates("symbol", keep="last")
-        .set_index(n.dropna(subset=["nav_date", "unit_nav"]).sort_values("nav_date").drop_duplicates("symbol", keep="last")["symbol"].astype("string"))["unit_nav"]
     )
+    latest_nav = latest_nav_frame.set_index("symbol")["unit_nav"]
     enriched["latest_unit_nav_for_aum"] = enriched["symbol"].astype("string").map(latest_nav)
     enriched["aum_cny_proxy"] = enriched["shares"] * pd.to_numeric(
         enriched["latest_unit_nav_for_aum"], errors="coerce"
     )
     reported = enriched["aum_cny_reported"].notna() & enriched["aum_cny_reported"].gt(0)
     proxy = enriched["aum_cny_proxy"].notna() & enriched["aum_cny_proxy"].gt(0)
-    enriched["aum_cny"] = enriched["aum_cny_reported"].where(reported, enriched["aum_cny_proxy"])
+    enriched["aum_cny"] = enriched["aum_cny_reported"].where(
+        reported, enriched["aum_cny_proxy"]
+    )
     enriched["aum_method"] = "MISSING"
     enriched.loc[proxy & ~reported, "aum_method"] = "PROXY_SHARES_TIMES_LATEST_NAV"
     enriched.loc[reported, "aum_method"] = "REPORTED"
@@ -51,7 +54,10 @@ def main() -> None:
     data = Path("data")
     manifest_path = data / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    as_of = str(manifest.get("quality", {}).get("as_of_date") or manifest["requested_range"]["end"])
+    as_of = str(
+        manifest.get("quality", {}).get("as_of_date")
+        or manifest["requested_range"]["end"]
+    )
     symbols = [str(value) for value in manifest.get("universe", [])]
 
     frames: list[pd.DataFrame] = []
@@ -72,7 +78,11 @@ def main() -> None:
 
     prices = pd.read_csv(data / "etf_prices.csv", dtype={"symbol": "string"})
     nav = pd.read_csv(data / "etf_nav.csv", dtype={"symbol": "string"})
-    factors = pd.read_csv(data / "factor_inputs.csv") if (data / "factor_inputs.csv").exists() else pd.DataFrame()
+    factors = (
+        pd.read_csv(data / "factor_inputs.csv")
+        if (data / "factor_inputs.csv").exists()
+        else pd.DataFrame()
+    )
     tracking = tracking_error_proxy(nav, factors)
     metadata_scoring = _metadata_for_scoring(metadata, nav)
     pqs = build_product_quality_scores(metadata_scoring, prices, tracking, as_of)
@@ -81,14 +91,27 @@ def main() -> None:
     if not pqs.empty:
         pqs.to_parquet(pqs_path.with_suffix(".parquet"), index=False)
 
-    proxy_count = int((pqs.get("aum_method", pd.Series(dtype="string")) == "PROXY_SHARES_TIMES_LATEST_NAV").sum()) if not pqs.empty else 0
+    proxy_count = (
+        int(
+            (
+                pqs.get("aum_method", pd.Series(dtype="string"))
+                == "PROXY_SHARES_TIMES_LATEST_NAV"
+            ).sum()
+        )
+        if not pqs.empty
+        else 0
+    )
     manifest["metadata_status"] = {
         "as_of_date": as_of,
         "rows": int(len(metadata)),
         "symbols": int(metadata["symbol"].nunique()) if not metadata.empty else 0,
-        "current_snapshot_symbols": int(incoming["symbol"].nunique()) if not incoming.empty else 0,
+        "current_snapshot_symbols": int(incoming["symbol"].nunique())
+        if not incoming.empty
+        else 0,
         "pqs_rows": int(len(pqs)),
-        "pqs_complete": int((pqs["pqs_status"] == "COMPLETE").sum()) if not pqs.empty else 0,
+        "pqs_complete": int((pqs["pqs_status"] == "COMPLETE").sum())
+        if not pqs.empty
+        else 0,
         "aum_proxy_symbols": proxy_count,
         "aum_proxy_method": "shares_times_latest_unit_nav_when_reported_aum_missing",
         "tracking_error_method": "NAV_vs_NDX_times_preferred_FX_annualized_proxy",
