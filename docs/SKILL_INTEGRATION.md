@@ -29,6 +29,7 @@ For every symbol, `quality.by_symbol` includes:
 - `pit_verified`
 - `source_degraded`
 - `critical_source_failure`
+- low-confidence `primary_market` fallback state
 - state labels such as `LIMITED_RESEARCH_DEPTH`, `STALE_PRICE`, `STALE_NAV`, `STALE_SNAPSHOT`, `PIT_UNVERIFIED`, `SOURCE_DEGRADED`
 - `formal_signal_ready`
 
@@ -93,7 +94,7 @@ For a signal on day `t`:
 
 ## 6. Primary-market regime and PCF
 
-The next dataset extension should add `etf_pcf` with fields such as:
+The target dataset extension is `etf_pcf` with fields such as:
 
 - `symbol`, `date`
 - `creation_allowed`, `redemption_allowed`
@@ -104,7 +105,18 @@ The next dataset extension should add `etf_pcf` with fields such as:
 - `creation_cash_premium`, `redemption_cash_discount`
 - `source`, `available_at`
 
-Regime interpretation is directional:
+Until a robust point-in-time PCF collector covers the full ETF universe, `quality.by_symbol.primary_market` exposes a deliberately **low-confidence fallback** from the latest NAV-page `subscription_status` / `redemption_status` fields.
+
+Rules for this fallback are asymmetric and conservative:
+
+- explicit strings such as `暂停申购` / `限制申购` are promoted to `creation_state=RESTRICTED`;
+- explicit strings such as `暂停赎回` / `限制赎回` are promoted to `redemption_state=RESTRICTED`;
+- labels such as `场内买入` / `场内卖出` are secondary-market descriptions and remain `UNKNOWN`; they must **not** be interpreted as proof that primary-market creation/redemption is open;
+- the fallback has `confidence=LOW` and does not replace PCF.
+
+The corresponding quality states are `CREATION_RESTRICTED_BY_NAV_STATUS`, `REDEMPTION_RESTRICTED_BY_NAV_STATUS`, or `PRIMARY_MARKET_STATUS_LOW_CONFIDENCE`.
+
+Regime interpretation remains directional:
 
 - creation restrictions weaken high-premium compression trades;
 - redemption restrictions weaken discount-repair trades;
