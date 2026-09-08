@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from datetime import datetime, time, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -8,6 +10,8 @@ import pandas as pd
 PRICE_FRESH_BDAYS = 0
 NAV_FRESH_BDAYS = 2
 SNAPSHOT_FRESH_BDAYS = 0
+CHINA_TZ = ZoneInfo("Asia/Shanghai")
+DAILY_DATA_READY_TIME_CN = time(15, 30)
 
 
 def _read(path: str | Path) -> pd.DataFrame:
@@ -28,6 +32,40 @@ def _normalize_bool(series: pd.Series) -> pd.Series:
     )
 
 
+def _previous_weekday(value: str) -> str:
+    day = pd.Timestamp(value).normalize()
+    previous = day - pd.offsets.BDay(1)
+    return previous.strftime("%Y-%m-%d")
+
+
+def _effective_market_date(as_of_date: str, observed_at_utc: str | None) -> str:
+    """Return the latest weekday whose daily market data should be complete.
+
+    This remains a weekday heuristic rather than an exchange-holiday calendar.
+    On the current China-market date, daily data is not considered complete
+    before 15:30 Asia/Shanghai. Weekends roll back to the previous weekday.
+    Historical weekday dates are kept unchanged.
+    """
+    requested = pd.Timestamp(as_of_date).date()
+    observed = pd.Timestamp(observed_at_utc or datetime.now(timezone.utc).isoformat())
+    if observed.tzinfo is None:
+        observed = observed.tz_localize("UTC")
+    observed_cn = observed.tz_convert(CHINA_TZ)
+
+    effective = requested
+    while effective.weekday() >= 5:
+        effective = (pd.Timestamp(effective) - pd.offsets.BDay(1)).date()
+
+    if (
+        requested == observed_cn.date()
+        and requested.weekday() < 5
+        and observed_cn.time().replace(tzinfo=None) < DAILY_DATA_READY_TIME_CN
+    ):
+        effective = pd.Timestamp(_previous_weekday(as_of_date)).date()
+
+    return effective.isoformat()
+
+
 def _business_day_lag(last_date: str | None, as_of_date: str) -> int | None:
     if not last_date:
         return None
@@ -37,6 +75,14 @@ def _business_day_lag(last_date: str | None, as_of_date: str) -> int | None:
         return 0
     start = last + pd.Timedelta(days=1)
     return int(len(pd.bdate_range(start, as_of)))
+
+
+def _on_or_before(group: pd.DataFrame, column: str, cutoff_date: str) -> pd.DataFrame:
+    if group.empty or column not in group.columns:
+        return group.copy()
+    dates = pd.to_datetime(group[column], errors="coerce")
+    cutoff = pd.Timestamp(cutoff_date).normalize()
+    return group.loc[dates.notna() & dates.le(cutoff)].copy()
 
 
 def _latest_date(group: pd.DataFrame, column: str) -> str | None:
@@ -137,13 +183,18 @@ def build_quality_report(
     universe_symbols: list[str],
     as_of_date: str,
     failures: list[str],
+    observed_at_utc: str | None = None,
 ) -> dict:
     """Build signal-readiness separately from structural file validation.
 
-    Freshness uses weekday lag as a deterministic conservative precheck. It is
-    explicitly a heuristic until an exchange trading calendar is wired in.
-    A source failure is recorded as degraded, but becomes critical only when
-    the resulting current input is stale or absent.
+    Freshness uses the latest *completed* weekday trading date as a deterministic
+    precheck. It remains a heuristic until an exchange holiday calendar is wired
+    in. Data dated after the effective market date is excluded from readiness
+    calculations so a historical/pre-close check cannot accidentally use future
+    rows already present in the local dataset.
+
+    A source failure is recorded as degraded, but becomes critical only when the
+    resulting current input is stale or absent.
 
     Primary-market states are currently a low-confidence fallback from NAV-page
     status text. Only explicit restriction language is promoted to RESTRICTED;
@@ -153,26 +204,39 @@ def build_quality_report(
     prices = _read(prices_path)
     nav = _read(nav_path)
     snapshot = _read(snapshot_path)
+    model_as_of_date = _effective_market_date(as_of_date, observed_at_utc)
 
     global_snapshot_failure = any(message.startswith("snapshot ") for message in failures)
     by_symbol: dict[str, dict] = {}
 
     for symbol in universe_symbols:
-        price_group = prices[prices["symbol"] == symbol] if "symbol" in prices.columns else pd.DataFrame()
-        nav_group = nav[nav["symbol"] == symbol] if "symbol" in nav.columns else pd.DataFrame()
-        snapshot_group = (
+        price_group_all = (
+            prices[prices["symbol"] == symbol]
+            if "symbol" in prices.columns
+            else pd.DataFrame()
+        )
+        nav_group_all = (
+            nav[nav["symbol"] == symbol]
+            if "symbol" in nav.columns
+            else pd.DataFrame()
+        )
+        snapshot_group_all = (
             snapshot[snapshot["symbol"] == symbol]
             if "symbol" in snapshot.columns
             else pd.DataFrame()
         )
 
+        price_group = _on_or_before(price_group_all, "date", model_as_of_date)
+        nav_group = _on_or_before(nav_group_all, "nav_date", model_as_of_date)
+        snapshot_group = _on_or_before(snapshot_group_all, "data_date", model_as_of_date)
+
         price_last = _latest_date(price_group, "date")
         nav_last = _latest_date(nav_group, "nav_date")
         snapshot_last = _latest_date(snapshot_group, "data_date")
 
-        price_lag = _business_day_lag(price_last, as_of_date)
-        nav_lag = _business_day_lag(nav_last, as_of_date)
-        snapshot_lag = _business_day_lag(snapshot_last, as_of_date)
+        price_lag = _business_day_lag(price_last, model_as_of_date)
+        nav_lag = _business_day_lag(nav_last, model_as_of_date)
+        snapshot_lag = _business_day_lag(snapshot_last, model_as_of_date)
         usable_prices = _usable_price_count(price_group)
         pit_verified = _latest_pit_verified(nav_group)
         source_degraded = _source_degraded(symbol, failures) or global_snapshot_failure
@@ -240,7 +304,10 @@ def build_quality_report(
 
     return {
         "as_of_date": as_of_date,
-        "freshness_method": "weekday_heuristic",
+        "model_as_of_date": model_as_of_date,
+        "observed_at_utc": observed_at_utc,
+        "freshness_method": "weekday_phase_heuristic",
+        "daily_data_ready_time_cn": DAILY_DATA_READY_TIME_CN.strftime("%H:%M"),
         "thresholds_business_days": {
             "price": PRICE_FRESH_BDAYS,
             "nav": NAV_FRESH_BDAYS,
