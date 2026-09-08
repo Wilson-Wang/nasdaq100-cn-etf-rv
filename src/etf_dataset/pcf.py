@@ -60,6 +60,17 @@ def _empty() -> pd.DataFrame:
     return pd.DataFrame(columns=PCF_COLUMNS)
 
 
+def _json_scalar(value: object) -> object:
+    if value is None or pd.isna(value):
+        return None
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except (ValueError, AttributeError):
+            pass
+    return value
+
+
 def _local_name(tag: str) -> str:
     return tag.rsplit("}", 1)[-1]
 
@@ -350,10 +361,10 @@ def pcf_summary(path: str | Path) -> dict:
             "rows": int(len(group)),
             "min_date": dates.min().strftime("%Y-%m-%d") if not dates.empty else None,
             "max_date": dates.max().strftime("%Y-%m-%d") if not dates.empty else None,
-            "creation_allowed": latest.get("creation_allowed"),
-            "redemption_allowed": latest.get("redemption_allowed"),
-            "pit_verified": latest.get("pit_verified"),
-            "source": latest.get("source"),
+            "creation_allowed": _json_scalar(latest.get("creation_allowed")),
+            "redemption_allowed": _json_scalar(latest.get("redemption_allowed")),
+            "pit_verified": _json_scalar(latest.get("pit_verified")),
+            "source": _json_scalar(latest.get("source")),
         }
     return {
         "rows": int(len(frame)),
