@@ -30,6 +30,10 @@ jobs:
         run: python scripts/update_dataset.py --lookback-days 450
       - name: Reconcile exchange calendar
         run: python scripts/reconcile_exchange_calendar.py
+      - name: Check stored research depth
+        run: python scripts/check_history_depth.py
+      - name: Check historical regime coverage
+        run: python scripts/check_regime_history_coverage.py
       - name: Update execution readiness
         run: python scripts/update_execution_readiness.py
       - name: Update metadata and PQS
