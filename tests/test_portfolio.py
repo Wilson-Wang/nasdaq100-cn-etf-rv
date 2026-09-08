@@ -16,4 +16,5 @@ def test_portfolio_never_upgrades_watch_and_removes_symbol_conflicts():
     assert plan.iloc[0]["pair"] in {"A-B", "A-C"}
     assert summary["conflict_rejections"] == 1
     assert "D-E" not in set(plan["pair"])
-    assert abs(float(plan["allocation_weight"].sum()) - 1.0) < 1e-12
+    assert abs(float(plan["allocation_weight"].sum()) - 0.40) < 1e-12
+    assert abs(float(summary["unallocated_weight"]) - 0.60) < 1e-12
