@@ -23,6 +23,36 @@ def _safe_float(value: Any) -> float | None:
     return value if np.isfinite(value) else None
 
 
+def _capped_weights(strengths: pd.Series, cap: float) -> np.ndarray:
+    n = len(strengths)
+    if n == 0:
+        return np.array([], dtype=float)
+    target_budget = min(1.0, n * cap)
+    values = strengths.clip(lower=0).to_numpy(dtype=float)
+    if values.sum() <= 0:
+        values = np.ones(n, dtype=float)
+    weights = np.zeros(n, dtype=float)
+    active = np.ones(n, dtype=bool)
+    remaining = target_budget
+    while active.any() and remaining > 1e-12:
+        active_values = values[active]
+        if active_values.sum() <= 0:
+            proposal = np.repeat(remaining / int(active.sum()), int(active.sum()))
+        else:
+            proposal = remaining * active_values / active_values.sum()
+        active_idx = np.flatnonzero(active)
+        over = proposal > cap + 1e-12
+        if not over.any():
+            weights[active_idx] = proposal
+            remaining = 0.0
+            break
+        capped_idx = active_idx[over]
+        weights[capped_idx] = cap
+        remaining -= cap * len(capped_idx)
+        active[capped_idx] = False
+    return weights
+
+
 def build_portfolio_plan(
     pair_analysis: pd.DataFrame,
     config: PortfolioConfig = PortfolioConfig(),
@@ -88,8 +118,6 @@ def build_portfolio_plan(
             "conflict_rejections": 0,
         }
 
-    # Edge dominates. Pair score and liquidity only modulate ranking. Missing
-    # liquidity is penalized rather than imputed as a favorable neutral score.
     liq = frame["pair_liquidity_score"].fillna(0).clip(0, 100) / 100.0
     score = frame["pair_score"].clip(0, 100) / 100.0
     edge = frame["net_expected_convergence_5d"].clip(lower=0)
@@ -121,34 +149,19 @@ def build_portfolio_plan(
         }
 
     selected = pd.DataFrame(selected_rows).copy().reset_index(drop=True)
-    strengths = selected["raw_strength"].clip(lower=0)
-    if float(strengths.sum()) <= 0:
-        weights = np.repeat(1.0 / len(selected), len(selected))
-    else:
-        weights = (strengths / strengths.sum()).to_numpy(dtype=float)
-
-    # Cap and renormalize iteratively. With the default three-pair limit and a
-    # 40% cap this produces a diversified research allocation when possible.
-    capped = np.minimum(weights, config.max_pair_weight)
-    if capped.sum() > 0:
-        capped = capped / capped.sum()
-    if len(capped) > 1 and capped.max() > config.max_pair_weight:
-        excess = capped - np.minimum(capped, config.max_pair_weight)
-        capped = np.minimum(capped, config.max_pair_weight)
-        room = np.maximum(config.max_pair_weight - capped, 0)
-        if room.sum() > 0 and excess.sum() > 0:
-            capped += room / room.sum() * excess.sum()
-    selected["allocation_weight"] = capped
+    selected["allocation_weight"] = _capped_weights(
+        selected["raw_strength"], config.max_pair_weight
+    )
     selected["rank"] = np.arange(1, len(selected) + 1)
     selected["selection_reason"] = "formal_signal_no_symbol_conflict"
 
-    # The no-shared-symbol rule already enforces the symbol cap for one rotation
-    # leg. Keep the cap in metadata so future portfolio extensions remain bound.
     output = selected[[column for column in columns if column in selected.columns]].copy()
     return output, {
         "status": "READY",
         "eligible_pairs": eligible_count,
         "selected_pairs": int(len(output)),
+        "allocated_weight": float(output["allocation_weight"].sum()),
+        "unallocated_weight": float(1.0 - output["allocation_weight"].sum()),
         "conflict_rejections": conflict_rejections,
         "max_pairs": config.max_pairs,
         "max_pair_weight": config.max_pair_weight,
