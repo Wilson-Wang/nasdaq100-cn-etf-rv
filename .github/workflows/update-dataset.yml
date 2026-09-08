@@ -39,8 +39,18 @@ jobs:
         run: python scripts/update_events.py
       - name: Analyze ETF pairs
         run: python scripts/analyze_pairs.py
+      - name: Analyze common-factor challenger
+        run: python scripts/analyze_factor_residuals.py
+      - name: Build portfolio research plan
+        run: python scripts/build_portfolio_plan.py
       - name: Update frozen OOS ledger
         run: python scripts/update_oos.py
+      - name: Calibrate execution-cost challenger
+        run: python scripts/calibrate_execution_cost.py
+      - name: Check source and research health
+        run: python scripts/check_research_health.py
+      - name: Generate FULL DELTA daily report
+        run: python scripts/generate_daily_report.py
       - name: Validate base dataset
         run: python scripts/validate_dataset.py
       - name: Validate research outputs
