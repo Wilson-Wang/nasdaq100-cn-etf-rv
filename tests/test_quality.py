@@ -62,7 +62,41 @@ def _write_frames(
     return prices_path, nav_path, snapshot_path
 
 
-def _report(paths, *, observed_at=AFTER_CLOSE_UTC, failures=None):
+def _write_pcf(
+    tmp_path,
+    *,
+    date: str = "2026-09-08",
+    creation_allowed: bool = True,
+    redemption_allowed: bool = True,
+    pit_verified: bool = True,
+):
+    path = tmp_path / "pcf.csv"
+    pd.DataFrame(
+        [
+            {
+                "symbol": "513100",
+                "date": date,
+                "creation_allowed": creation_allowed,
+                "redemption_allowed": redemption_allowed,
+                "creation_unit": 1_000_000,
+                "creation_limit": 5_000_000,
+                "redemption_limit": 4_000_000,
+                "net_creation_limit": 3_000_000,
+                "net_redemption_limit": 2_000_000,
+                "cash_substitution_limit_pct": 50.0,
+                "max_creation_cash_premium_pct": 2.0,
+                "max_redemption_cash_discount_pct": 1.0,
+                "available_at": "2026-09-08T08:30:00+08:00",
+                "availability_method": "sse_official_08:30_cn",
+                "pit_verified": pit_verified,
+                "source": "sse:official_pcf",
+            }
+        ]
+    ).to_csv(path, index=False)
+    return path
+
+
+def _report(paths, *, observed_at=AFTER_CLOSE_UTC, failures=None, pcf_path=None):
     prices_path, nav_path, snapshot_path = paths
     return build_quality_report(
         prices_path,
@@ -72,6 +106,7 @@ def _report(paths, *, observed_at=AFTER_CLOSE_UTC, failures=None):
         "2026-09-08",
         failures or [],
         observed_at_utc=observed_at,
+        pcf_path=pcf_path,
     )
 
 
@@ -85,6 +120,7 @@ def test_quality_report_separates_research_depth_from_signal_readiness(tmp_path)
     assert item["price_lag_business_days"] == 0
     assert item["nav_lag_business_days"] == 2
     assert item["formal_signal_ready"] is True
+    assert "PCF_MISSING" in item["states"]
     assert report["formal_signal_ready_symbols"] == ["513100"]
 
 
@@ -182,3 +218,40 @@ def test_secondary_market_labels_are_not_misclassified_as_primary_market_open(tm
     assert item["primary_market"]["creation_state"] == "UNKNOWN"
     assert item["primary_market"]["redemption_state"] == "UNKNOWN"
     assert "PRIMARY_MARKET_STATUS_LOW_CONFIDENCE" in item["states"]
+
+
+def test_current_verified_official_pcf_overrides_nav_fallback(tmp_path):
+    paths = _write_frames(
+        tmp_path,
+        subscription_status="暂停申购",
+        redemption_status="暂停赎回",
+    )
+    pcf_path = _write_pcf(
+        tmp_path,
+        creation_allowed=True,
+        redemption_allowed=False,
+    )
+    report = _report(paths, pcf_path=pcf_path)
+
+    item = report["by_symbol"]["513100"]
+    assert item["pcf_current_verified"] is True
+    assert item["pcf_lag_business_days"] == 0
+    assert item["primary_market"]["source"] == "official_pcf"
+    assert item["primary_market"]["confidence"] == "HIGH"
+    assert item["primary_market"]["creation_state"] == "OPEN"
+    assert item["primary_market"]["redemption_state"] == "RESTRICTED"
+    assert "REDEMPTION_RESTRICTED_BY_PCF" in item["states"]
+    assert "CREATION_RESTRICTED_BY_NAV_STATUS" not in item["states"]
+    assert "PCF_MISSING" not in item["states"]
+
+
+def test_stale_pcf_does_not_override_nav_fallback(tmp_path):
+    paths = _write_frames(tmp_path, subscription_status="暂停申购")
+    pcf_path = _write_pcf(tmp_path, date="2026-09-07")
+    report = _report(paths, pcf_path=pcf_path)
+
+    item = report["by_symbol"]["513100"]
+    assert item["pcf_current_verified"] is False
+    assert "STALE_PCF" in item["states"]
+    assert item["primary_market"]["source"] == "nav_status_fallback"
+    assert item["primary_market"]["creation_state"] == "RESTRICTED"
