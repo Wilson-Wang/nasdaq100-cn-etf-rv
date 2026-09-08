@@ -8,6 +8,7 @@ import pandas as pd
 
 from .config import load_universe
 from .quality import build_quality_report
+from .snapshot import add_snapshot_derived_fields
 from .sources import (
     fetch_nav_akshare_em,
     fetch_prices_with_fallback,
@@ -85,6 +86,7 @@ def update_dataset(
     print("fetching latest ETF snapshot", flush=True)
     try:
         snapshot_in = run_with_timeout(fetch_snapshot_akshare_em, symbols, seconds=45)
+        snapshot_in = add_snapshot_derived_fields(snapshot_in)
         if snapshot_in.empty:
             failures.append("snapshot akshare:eastmoney: empty result")
     except Exception as exc:
